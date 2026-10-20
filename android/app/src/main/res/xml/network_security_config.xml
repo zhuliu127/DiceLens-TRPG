@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  network_security_config.xml — 明文（http://）流量的放行规则
+
+  ════════════════════════════════════════════════════════════════════════
+  v1.18.4 的重大修正：**`<domain>` 不是网段，是主机名**
+  ════════════════════════════════════════════════════════════════════════
+
+  前一版（v1.18.3）我写了这样一段，以为它能放行整个 192.168.x.x 网段：
+
+      <domain includeSubdomains="true">192.168.x.0</domain>
+
+  **这是错的，而且错得很隐蔽。** 安卓的 network security config 里，
+  `<domain>` 做的是**主机名字符串匹配**，不是 CIDR 前缀匹配：
+  `includeSubdomains="true"` 只是在域名前补一个点（`.192.168.x.0`），
+  于是它匹配的是「字面主机名 `192.168.x.0`」和「以 `.192.168.x.0` 结尾的域名」。
+  真实设备地址 `192.168.x.y` **两条都不命中**。
+
+  后果（真机实测，用户两台手机复现）：
+      · http://127.0.0.1:4211   → 命中了**精确**条目 → 36ms 正常 ✅
+      · http://192.168.x.y:4211 → 谁都没命中 → 落到 base-config 的
+        cleartextTrafficPermitted="false" → 被系统**瞬间掐断** → 12ms ❌
+  这个「回环通、局域网 IP 秒失败」的组合，正是用户截图里的现象。
+  它看起来像 AP 隔离、像服务没起来，其实只是我的白名单写法无效。
+
+  ## 正确做法：只能全局放开明文，再用 domain-config 把公网推回 TLS
+
+  安卓**没有**提供「按 IP 网段放行明文」的语法 —— 没有 CIDR，没有通配 IP。
+  因此唯一可靠的写法是：
+
+      base-config   cleartextTrafficPermitted="true"   ← 全局允许明文
+      domain-config cleartextTrafficPermitted="false"  ← 公网/已知域名强制 TLS
+
+  安全边界并没有因此失守：真正的敏感数据（AI 请求 / 角色卡上传）
+  走的是下面显式钉死为 TLS 的那几个**公共模型服务域名**。
+  局域网明文只在「用户自己开的房间中继」上用，内容本来就是要在同一
+  WiFi 内广播的角色卡状态，不涉及账号密码。
+  （这一取舍记在 docs/出包指引 与 docs/开源说明 里，不隐瞒。）
+
+  ## 为什么不再逐条列主机的 IP
+
+  直连源站（那台公网 IP）现在靠 domain-config 钉不住（它是 IP 不是域名，
+  安卓只允许在 base-config 层面放开明文）。既然 base-config 已经放开，
+  这条 IP 自然可用 —— 所以**换服务器时不再需要改这个文件**，
+  这反而消除了一处「改服务器忘了改 nsc」的隐患。
+
+  ⚠️ 改这个文件后必须重新出包，且**必须真的装到手机上**才生效。
+  ⚠️ 如果将来要收紧，思路只能是「不再全局放开 + 用域名而非 IP」，
+     而不是「再往 domain-config 里补几条 IP」—— 那正是这次踩的坑。
+-->
+<network-security-config>
+
+    <!--
+      全局允许明文。
+      ⚠️ 这不是偷懒：安卓无法按 IP 网段放行明文（`<domain>` 只做主机名匹配），
+         而局域网房间服务的地址是运行时才知道的裸 IP（192.168.x.y 什么段都有可能），
+         打包时不可能枚举。见文件头部的完整说明。
+    -->
+    <base-config cleartextTrafficPermitted="true" />
+
+    <!--
+      ════════════════════════════════════════════════════════════════
+      公网服务：强制 TLS
+      ════════════════════════════════════════════════════════════════
+
+      上面把全局明文放开了，所以这里必须反过来把**已知的公网服务**
+      钉死成「只许 https」，否则一旦哪天有人误填 http 地址，
+      角色卡就会明文上传 —— 这正是当初想避免的事。
+
+      注意：这里只对**下面列出的这些主机**生效，其它公网主机仍走
+      base-config（即允许明文）。所以新增一个走 http 的公网服务时
+      无需改本文件；但要**保证** sensitive 的服务都在下面这张单子里。
+    -->
+    <domain-config cleartextTrafficPermitted="false">
+        <!--
+          ⚠️ v2.0.2：这里**不再列任何自有域名**。
+          开源包会被所有人解包阅读，把「作者自己的服务器域名」写进 APK，
+          等于把私有基础设施信息随包发出去 —— 与「开源包不得含私有信息」
+          这条红线冲突。而 self 版预置地址里对域名用的是 https://
+          （另一条 roomBase 是 http:// + 公网 IP，IP 本来就不在
+          <domain> 的能力范围内），删除这条钉子对功能没有任何影响。
+
+          因此下面只保留**公共模型服务域名**：它们本来就是公开的，
+          而角色卡 / API Key 这类敏感数据正是发给它们的，值得钉死。
+        -->
+        <domain includeSubdomains="true">api.openai.com</domain>
+        <domain includeSubdomains="true">api.deepseek.com</domain>
+        <domain includeSubdomains="true">dashscope.aliyuncs.com</domain>
+        <domain includeSubdomains="true">open.bigmodel.cn</domain>
+    </domain-config>
+
+</network-security-config>

@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>跑团车卡器 · 8 张卖点图（16:9）</title>
+<style>
+/* ============================================================
+   跑团车卡器 · 八张单点卖点图（每张 1920×1080，16:9）· v1.15.0
+   配色取自 web/css/app.css 的 CSS 变量：羊皮纸底 + 古金 + 神秘紫
+   素材全部是 tools/shoot_promo_viewport.py / shoot_promo_extra.py
+   在真实界面上截下来的，没有一张是画出来的（含 v_12_longimg 那张真实导出的长图）
+
+   版式约定（别再踩）：
+     · 正文栏 86 → 836（750 宽）；右侧舞台 900 → 1834（934 宽）
+     · 舞台高 790（140 → 930），必须给右下角印章（954 起）留空
+     · 手机内宽 284（412 视口等比 → 高 615），别改高度，否则界面会被拉变形
+     · 「一键长图」那张里的手机与长图必须是**同一张卡**：
+       手机用 v_15_card、长图用 v_12_longimg，这两个文件由同一个角色导出 ——
+       换素材时要成对换，否则会出现「手机里是甲、长图里是乙」这种一眼假
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --gold:#a8791a; --gold-2:#d4a94a; --gold-lt:#f0c96a;
+  --arcane:#6a5cc4; --arcane-2:#8a7de0;
+  --ink:#221c12; --ink-2:#5a4f3c; --ink-3:#8b7f6a;
+  --paper:#f2efe9; --paper-2:#e9e4da;
+  --teal:#2f8878; --danger:#c0392f;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --sans:"PingFang SC","Noto Sans SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+}
+html,body{ margin:0; padding:0; background:#15130f; }
+.slide{
+  position:relative; width:1920px; height:1080px; overflow:hidden;
+  font-family:var(--sans); color:var(--ink); background:var(--paper);
+}
+.slide + .slide { margin-top:20px; }
+
+/* ---------- 底纹 ---------- */
+.bg-layer{ position:absolute; inset:0; z-index:0; }
+.bg-base{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(120% 90% at 82% 8%,  rgba(212,169,74,.20) 0%, rgba(212,169,74,0) 58%),
+    radial-gradient(90% 80% at 8% 96%,   rgba(106,92,196,.16) 0%, rgba(106,92,196,0) 60%),
+    linear-gradient(155deg, #faf8f3 0%, #f2efe9 42%, #e7e1d5 100%);
+}
+.bg-grid{
+  position:absolute; inset:0; opacity:.30;
+  background-image:
+    linear-gradient(rgba(30,24,12,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,24,12,.045) 1px, transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask:linear-gradient(105deg, #000 0%, #000 42%, transparent 78%);
+          mask:linear-gradient(105deg, #000 0%, #000 42%, transparent 78%);
+}
+.bg-rings{ position:absolute; right:-260px; top:-300px; width:1180px; height:1180px; opacity:.13; }
+.bg-rings circle{ fill:none; stroke:var(--gold); stroke-width:1.2; }
+.bg-rings .thin{ stroke-width:.7; }
+.bg-dashed{ position:absolute; right:120px; top:120px; width:640px; height:640px; opacity:.10;
+  background:repeating-conic-gradient(from 0deg, var(--gold) 0deg 1deg, transparent 1deg 30deg);
+  -webkit-mask:radial-gradient(circle, transparent 66%, #000 66.5%, #000 68%, transparent 68.5%);
+          mask:radial-gradient(circle, transparent 66%, #000 66.5%, #000 68%, transparent 68.5%);
+  border-radius:50%;
+}
+
+/* ---------- 顶栏 ---------- */
+.top{
+  position:absolute; left:86px; right:86px; top:54px; z-index:6;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.brand{ display:flex; align-items:center; gap:15px; }
+.brand-logo{
+  width:58px; height:58px; border-radius:15px;
+  background:linear-gradient(150deg, var(--gold-2), #7a5c14);
+  box-shadow:0 6px 20px rgba(168,121,26,.34), inset 0 1px 0 rgba(255,255,255,.34);
+  display:flex; align-items:center; justify-content:center; font-size:29px;
+}
+.brand-tx b{ display:block; font-family:var(--serif); font-size:24px; letter-spacing:.14em; font-weight:800; }
+.brand-tx span{ display:block; font-size:11.5px; color:var(--ink-3); letter-spacing:.30em; margin-top:3px; }
+.badges{ display:flex; gap:10px; align-items:center; }
+.badge{
+  font-size:13.5px; font-weight:600; color:var(--gold);
+  background:rgba(212,169,74,.13); border:1px solid rgba(168,121,26,.32);
+  padding:8px 15px; border-radius:999px;
+}
+.badge.alt{ color:var(--arcane); background:rgba(106,92,196,.11); border-color:rgba(106,92,196,.30); }
+.badge.idx{ font-family:var(--serif); letter-spacing:.10em; color:#6d5a2c;
+  background:rgba(255,255,255,.66); border-color:rgba(30,24,12,.14); }
+
+/* ---------- 左栏文案 ---------- */
+.copy{ position:absolute; left:86px; top:176px; width:750px; z-index:5; }
+.kicker{
+  display:inline-flex; align-items:center; gap:9px;
+  font-size:14px; font-weight:700; letter-spacing:.20em; color:var(--gold);
+  margin-bottom:16px;
+}
+.kicker::before{ content:''; width:34px; height:2px; background:linear-gradient(90deg,var(--gold),transparent); }
+h1{
+  font-family:var(--serif); font-size:74px; line-height:1.12; font-weight:900;
+  letter-spacing:.012em; color:#1b160d;
+}
+h1 em{
+  font-style:normal; display:block;
+  background:linear-gradient(96deg, #d4a94a 6%, #8a6210 60%, #6a5cc4 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.sub{
+  margin-top:17px; font-size:19px; line-height:1.76; color:var(--ink-2);
+  max-width:720px;
+}
+.sub b{ color:var(--ink); font-weight:700; }
+
+/* 三条要点 */
+.points{ margin-top:26px; display:flex; flex-direction:column; gap:11px; width:750px; }
+.pt{
+  display:flex; gap:12px; align-items:flex-start;
+  background:rgba(255,255,255,.74);
+  border:1px solid rgba(30,24,12,.10);
+  border-radius:13px; padding:12px 16px;
+  box-shadow:0 2px 10px rgba(60,45,20,.045);
+}
+.pt .ic{ font-size:21px; line-height:1.15; flex:0 0 auto; }
+.pt .tx b{ display:block; font-size:16px; font-weight:700; color:#241d11; }
+.pt .tx span{ display:block; font-size:12.5px; color:var(--ink-3); margin-top:4px; line-height:1.5; }
+.pt.hot{ background:rgba(255,250,238,.94); border-color:rgba(168,121,26,.44); }
+.pt.hot .tx b{ color:#8a6210; }
+
+/* ---------- 底部一行 ---------- */
+.foot{
+  position:absolute; left:86px; bottom:52px; z-index:6;
+  display:flex; align-items:center; gap:11px; flex-wrap:wrap; max-width:1120px;
+}
+.chip{
+  font-size:12.5px; color:var(--ink-2);
+  background:rgba(255,255,255,.74); border:1px solid rgba(30,24,12,.11);
+  padding:9px 14px; border-radius:10px; white-space:nowrap;
+}
+.chip b{ color:var(--gold); font-weight:700; }
+
+/* ---------- 右上印章 ---------- */
+.seal{
+  position:absolute; right:52px; bottom:30px; z-index:7;
+  width:92px; height:92px; border-radius:50%;
+  border:2.5px solid rgba(168,121,26,.40);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--gold); text-align:center; transform:rotate(-9deg);
+  background:rgba(255,255,255,.46);
+}
+.seal b{ font-family:var(--serif); font-size:17px; letter-spacing:.10em; line-height:1.16; }
+.seal span{ font-size:8.5px; letter-spacing:.12em; margin-top:3px; color:var(--ink-3); }
+
+/* ---------- 右侧舞台 ---------- */
+.stage{ position:absolute; left:900px; top:140px; width:934px; height:790px; z-index:4; }
+
+/* 手机框：内宽 284 = 412 视口等比，高 615 = 284×892/412 */
+.phone{
+  position:absolute; width:300px; padding:8px;
+  border-radius:34px; background:#14110c;
+  box-shadow:0 30px 62px rgba(45,32,10,.24), 0 5px 16px rgba(45,32,10,.15);
+  border:1px solid rgba(255,255,255,.14);
+}
+.phone img{
+  display:block; width:284px; height:615px; border-radius:27px;
+  object-fit:cover; object-position:top center;
+}
+.phone .cap{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:-30px;
+  white-space:nowrap; font-size:12.5px; color:var(--ink-3); letter-spacing:.03em;
+  background:rgba(255,255,255,.86); border:1px solid rgba(30,24,12,.08);
+  padding:5px 12px; border-radius:999px;
+}
+
+/* 舞台左侧的小栏目 */
+.side{ position:absolute; left:0; top:100px; width:470px; }
+.side-h{ font-family:var(--serif); font-size:19px; font-weight:800; color:#2b2213; margin-bottom:13px; }
+.row{
+  display:flex; gap:11px; align-items:flex-start;
+  background:rgba(255,255,255,.80); border:1px solid rgba(30,24,12,.10);
+  border-radius:12px; padding:11px 14px; margin-bottom:9px;
+  box-shadow:0 2px 9px rgba(60,45,20,.04);
+}
+.row .k{ font-size:16px; line-height:1.2; flex:0 0 auto; }
+.row .t{ font-size:14.5px; font-weight:700; color:#241d11; line-height:1.35; }
+.row .t small{ display:block; font-weight:400; font-size:12px; color:var(--ink-3); margin-top:3px; }
+.row.bad{ background:rgba(255,245,244,.90); border-color:rgba(192,57,47,.26); }
+.row.bad .t{ color:#8d2b22; text-decoration:line-through; text-decoration-thickness:1.5px; }
+.row.good{ background:rgba(240,252,247,.94); border-color:rgba(47,136,120,.34); }
+.row.good .t{ color:#1e6656; }
+
+/* 大数字 */
+.bignum{ font-family:var(--serif); font-weight:900; line-height:.86;
+  background:linear-gradient(160deg,#d4a94a 0%,#8a6210 62%,#6a5cc4 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+
+/* 世界设定网格 */
+.worlds{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px 13px; }
+.world{
+  height:84px; border-radius:13px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px;
+  background:rgba(255,255,255,.82); border:1px solid rgba(30,24,12,.11);
+  box-shadow:0 2px 9px rgba(60,45,20,.045);
+}
+.world b{ font-family:var(--serif); font-size:19px; font-weight:800; color:#2b2213; letter-spacing:.02em; }
+.world span{ font-size:11.5px; color:var(--ink-3); letter-spacing:.06em; }
+.world.hot{ background:rgba(255,250,238,.96); border-color:rgba(168,121,26,.46); }
+.world.hot b{ color:#8a6210; }
+.world.alt b{ color:#4b3f8f; }
+
+/* 流程链 */
+.flow{ display:flex; flex-direction:column; gap:0; }
+.node{
+  border-radius:12px; padding:11px 15px;
+  background:rgba(255,255,255,.84); border:1px solid rgba(30,24,12,.11);
+  box-shadow:0 2px 9px rgba(60,45,20,.04);
+}
+.node b{ display:block; font-size:14.5px; font-weight:700; color:#241d11; }
+.node span{ display:block; font-size:11.5px; color:var(--ink-3); margin-top:3px; line-height:1.45; }
+.node.model{ background:rgba(244,242,255,.92); border-color:rgba(106,92,196,.32); }
+.node.model b{ color:#4b3f8f; }
+.node.local{ background:rgba(240,252,247,.94); border-color:rgba(47,136,120,.34); }
+.node.local b{ color:#1e6656; }
+.arrow{ display:flex; align-items:center; gap:9px; padding:5px 0 5px 16px; }
+.arrow i{ width:2px; height:16px; background:rgba(168,121,26,.42); display:block; }
+.arrow em{ font-style:normal; font-size:11px; color:var(--ink-3); letter-spacing:.08em; }
+
+/* 上限条 */
+.capline{ margin-bottom:15px; }
+.capline .lb{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px; }
+.capline .lb b{ font-size:15px; font-weight:700; color:#241d11; }
+.capline .lb span{ font-family:var(--serif); font-size:19px; font-weight:800; color:var(--gold); }
+.bar{ position:relative; height:12px; border-radius:7px; background:rgba(30,24,12,.09); overflow:hidden; }
+.bar i{ position:absolute; inset:0 auto 0 0; border-radius:7px;
+  background:linear-gradient(90deg, var(--gold-2), var(--gold)); }
+.bar u{ position:absolute; top:-4px; bottom:-4px; width:3px; background:var(--arcane); border-radius:2px; }
+
+/* 图片框（长图 / 截图特写） */
+.frame{
+  position:absolute; border-radius:16px; padding:11px;
+  background:rgba(255,255,255,.90); border:1px solid rgba(30,24,12,.12);
+  box-shadow:0 16px 40px rgba(45,32,10,.16);
+}
+.frame img{ display:block; border-radius:9px; }
+.frame .tag{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:-15px;
+  white-space:nowrap; font-size:12px; color:var(--ink-2);
+  background:rgba(255,255,255,.94); border:1px solid rgba(30,24,12,.10);
+  padding:5px 13px; border-radius:999px;
+}
+.fadebot{ position:relative; overflow:hidden; }
+.fadebot::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:150px;
+  background:linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.96) 78%);
+  pointer-events:none;
+}
+/* 只读链接示意（明确是示意用的占位，不是截图） */
+.linkpill{
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.92); border:1px dashed rgba(168,121,26,.55);
+  border-radius:999px; padding:11px 16px;
+}
+.linkpill .u{ font-family:Consolas,Menlo,monospace; font-size:13px; color:#5a4f3c; }
+.linkpill .lk{ font-size:11px; font-weight:700; color:#1e6656; letter-spacing:.06em; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     01 · 一秒开团
+     ============================================================ -->
+<section class="slide" id="sp1" data-name="sp-01-kaitao">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <circle cx="500" cy="500" r="120"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+      <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">完全离线</div><div class="badge">开源免费</div>
+      <div class="badge idx">01 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">快速开始</div>
+    <h1>点一下<em>五张卡摆在你面前</em></h1>
+    <div class="sub">
+      首页点「🎲 生成随机角色」，<b>一次出 5 张完整角色卡</b>。<br>
+      属性、职业、技能点、装备、背景全都算好了 —— 挑一张点「选这张」，
+      直接进角色卡页，不用再从零填一遍。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">📋</div><div class="tx">
+        <b>一张不落的完整卡</b><span>8 项属性 + 派生值 + 职业 + 技能 + 武器 + 背景，全都写好了</span></div></div>
+      <div class="pt"><div class="ic">🔁</div><div class="tx">
+        <b>5 张之间不重样</b><span>同批的世界设定、姓名、背景文本都去重，不会五张长一个样</span></div></div>
+      <div class="pt hot"><div class="ic">⏱</div><div class="tx">
+        <b>开团前一分钟也来得及</b><span>不满意点「换一批」，1 秒换 5 张</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="side">
+      <div class="side-h">生成完就已经是「能上桌」的卡</div>
+      <div class="row good"><div class="k">✓</div><div class="t">属性 8 项已分配<small>派生 HP / MP / SAN / MOV 自动算好</small></div></div>
+      <div class="row good"><div class="k">✓</div><div class="t">技能点全部用完<small>职业点 344/344 · 兴趣点 156/156</small></div></div>
+      <div class="row good"><div class="k">✓</div><div class="t">装备与背景已写好<small>武器、信用评级、现金、外貌与重要之人</small></div></div>
+    </div>
+    <div class="phone" style="left:552px; top:96px;">
+      <img src="./v_14_preset.png" alt="随机生成的候选角色卡">
+      <div class="cap">🎲 点一下出 5 张 · 这是其中一张</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🎲 一次生成 <b>5</b> 张</div>
+    <div class="chip">🌍 每张都不重样</div>
+    <div class="chip">✓ 生成即可上桌</div>
+    <div class="chip">📶 断网也能生成</div>
+  </div>
+  <div class="seal"><b>开源</b><b>免费</b><span>无广告 · 无内购</span></div>
+</section>
+
+
+<!-- ============================================================
+     02 · 完全离线
+     ============================================================ -->
+<section class="slide" id="sp2" data-name="sp-02-offline">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <circle cx="500" cy="500" r="120"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">完全离线</div><div class="badge">数据只在本机</div>
+      <div class="badge idx">02 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">隐私优先</div>
+    <h1>飞行模式<em>照常车卡</em></h1>
+    <div class="sub">
+      不联网、不用注册、没有账号。掷骰、规则计算、完整性检查<b>全部在手机上跑完</b>，
+      角色卡存在你自己的手机里。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">✈️</div><div class="tx">
+        <b>全程不需要网络</b><span>飞机上、地铁里、断网的咖啡馆，打开就能车</span></div></div>
+      <div class="pt"><div class="ic">🔐</div><div class="tx">
+        <b>角色卡不上传</b><span>存在本机存储；只有你主动点「云分享」或「AI 车卡」才会联网</span></div></div>
+      <div class="pt"><div class="ic">🚫</div><div class="tx">
+        <b>无广告、无内购、无推送</b><span>没有开屏广告，也没有「解锁更多属性」这种收费墙</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="side">
+      <div class="side-h">这里没有的东西</div>
+      <div class="row bad"><div class="k">✕</div><div class="t">需要联网才能用</div></div>
+      <div class="row bad"><div class="k">✕</div><div class="t">注册 / 登录 / 绑定手机号</div></div>
+      <div class="row bad"><div class="k">✕</div><div class="t">广告与内购</div></div>
+      <div class="row good" style="margin-top:16px;"><div class="k">✈️</div><div class="t">飞行模式下：照常车卡</div></div>
+      <div class="row good"><div class="k">📱</div><div class="t">数据落在本机存储</div></div>
+    </div>
+    <div class="phone" style="left:552px; top:96px;">
+      <img src="./v_01_home.png" alt="首页">
+      <div class="cap">📱 打开就能用 · 没有登录墙、没有开屏广告</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">✈️ 断网可用</div>
+    <div class="chip">👤 无账号体系</div>
+    <div class="chip">🗄 无云端依赖</div>
+    <div class="chip">📵 无广告 · 无内购</div>
+  </div>
+  <div class="seal"><b>数据</b><b>本机</b><span>不上传 · 不注册</span></div>
+</section>
+
+
+<!-- ============================================================
+     03 · 12 套世界设定
+     ============================================================ -->
+<section class="slide" id="sp3" data-name="sp-03-worlds">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">12 套世界</div><div class="badge">人设自洽</div>
+      <div class="badge idx">03 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">人设底座</div>
+    <h1>12 套世界设定<em>姓名籍贯装备全自洽</em></h1>
+    <div class="sub">
+      民国上海、1920 年代美国、维多利亚英国、沙俄 19 世纪、近未来……<br>
+      每个设定都自带<b>姓名库、城市与地标、时代、货币单位、装备口径</b>，
+      不会出现「民国侦探掏出智能手机」这种事。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🧩</div><div class="tx">
+        <b>一个设定管五件事</b><span>姓名 → 地点 → 时代 → 货币 → 武器口径，全套跟着走</span></div></div>
+      <div class="pt"><div class="ic">🎯</div><div class="tx">
+        <b>职业口味也跟着换</b><span>民国偏侦探记者，近未来偏黑客佣兵，按设定加权抽样</span></div></div>
+      <div class="pt hot"><div class="ic">🔀</div><div class="tx">
+        <b>一批里不重样</b><span>5 张候选优先用不同世界设定，避免五张全挤在一个地区</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="worlds" style="margin-top:6px;">
+      <div class="world"><b>中国 · 当代</b><span>¥ · 现代武器口径</span></div>
+      <div class="world hot"><b>中国 · 民国</b><span>银元 · 1920s 口径</span></div>
+      <div class="world"><b>中国 · 古代</b><span>两（白银）· 冷兵器</span></div>
+      <div class="world"><b>中国 · 八十年代</b><span>元 · 现代武器口径</span></div>
+      <div class="world hot"><b>美国 · 1920 年代</b><span>$ · 1920s 口径</span></div>
+      <div class="world hot"><b>英国 · 维多利亚</b><span>£ · 1920s 口径</span></div>
+      <div class="world"><b>美国 · 当代</b><span>$ · 现代武器口径</span></div>
+      <div class="world alt"><b>欧洲 · 当代</b><span>$ · 现代武器口径</span></div>
+      <div class="world"><b>日本 · 当代</b><span>円 · 现代武器口径</span></div>
+      <div class="world"><b>澳大利亚 · 当代</b><span>A$ · 现代武器口径</span></div>
+      <div class="world alt"><b>沙俄 · 19 世纪</b><span>卢布 · 1920s 口径</span></div>
+      <div class="world alt"><b>近未来</b><span>¤ · 现代武器口径</span></div>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <div class="chip">👤 姓名库</div>
+      <div class="chip">🏙 城市与地标</div>
+      <div class="chip">📅 时代</div>
+      <div class="chip">💰 货币单位</div>
+      <div class="chip">🔪 装备口径</div>
+    </div>
+    <div style="margin-top:16px; font-size:13px; color:var(--ink-3); line-height:1.7;">
+      数据全部写在 <b style="color:#5a4f3c;">web/js/core/personas.js</b> 里 ——
+      想加自己的世界（比如「蒸汽朋克伦敦」），照着已有条目加一段就行，不用改引擎。
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🌍 12 套世界设定</div>
+    <div class="chip">🧩 人设五件套自洽</div>
+    <div class="chip">✍️ 可自行扩展</div>
+  </div>
+  <div class="seal"><b>人设</b><b>自洽</b><span>不串味</span></div>
+</section>
+
+
+<!-- ============================================================
+     04 · 彩蛋角色
+     ============================================================ -->
+<section class="slide" id="sp4" data-name="sp-04-easteregg">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <circle cx="500" cy="500" r="120"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+      <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">29 位彩蛋</div><div class="badge">藏在随机池</div>
+      <div class="badge idx">04 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">彩蛋</div>
+    <h1>29 位彩蛋角色<em>藏在随机池里</em></h1>
+    <div class="sub">
+      跑团成员与古今中外的名人混在随机池里，<b>平均点两三次就能撞见一位</b>。
+      抽到的不是贴纸，是一张<b>从头到脚写完、能直接上桌</b>的角色卡。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🥚</div><div class="tx">
+        <b>29 位，随机撞见</b><span>按「一批 5 张」结算，约四次生成里有一次带彩蛋</span></div></div>
+      <div class="pt"><div class="ic">🎭</div><div class="tx">
+        <b>角标直接标出来</b><span>卡头挂着专属角标，抽到了不用翻名单才知道</span></div></div>
+      <div class="pt hot"><div class="ic">✅</div><div class="tx">
+        <b>彩蛋卡也照样合规</b><span>它和普通卡走同一套规则校验与房规上限，不是「玩具卡」</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div style="position:absolute; left:0; top:92px; width:330px;">
+      <div class="bignum" style="font-size:190px;">29</div>
+      <div style="font-family:var(--serif); font-size:27px; font-weight:800; color:#2b2213; margin-top:6px;">
+        位彩蛋角色
+      </div>
+      <div style="font-size:14px; color:var(--ink-2); line-height:1.75; margin-top:11px;">
+        平均<b>点 2–3 次</b>随机生成<br>就能遇到一位。
+      </div>
+      <div class="row good" style="margin-top:18px;">
+        <div class="k">🥚</div>
+        <div class="t">抽到就是完整卡<small>职业点已用完 · 装备与背景已写好</small></div>
+      </div>
+    </div>
+    <div class="frame" style="left:392px; top:80px; width:530px;">
+      <div class="fadebot">
+        <img src="./v_13_egg.png" alt="彩蛋角色卡特写" style="width:508px;">
+      </div>
+      <div class="tag">🥚 抽到的彩蛋卡 · 卡头挂着「🎭 跑团成员」角标</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🥚 <b>29</b> 位彩蛋角色</div>
+    <div class="chip">🎲 平均 2–3 次遇到一位</div>
+    <div class="chip">🎭 卡头角标可见</div>
+    <div class="chip">✅ 彩蛋卡同样过校验</div>
+  </div>
+  <div class="seal"><b>彩蛋</b><b>29</b><span>抽到就能跑</span></div>
+</section>
+
+
+<!-- ============================================================
+     05 · AI 车卡
+     ============================================================ -->
+<section class="slide" id="sp5" data-name="sp-05-ai">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+      <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge alt">AI 车卡</div><div class="badge">创意归模型 · 规则归本地</div>
+      <div class="badge idx">05 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">AI 车卡</div>
+    <h1>一句话<em>生成一位调查员</em></h1>
+    <div class="sub">
+      描述你想扮的人 ——「民国时期的私家侦探，前警察，因为一桩案子丢了差事」。<br>
+      模型负责<b>创意与背景</b>，属性、技能点、职业限制由<b>本机按规则算</b>，
+      所以出来的卡照样过完整性检查。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🧠</div><div class="tx">
+        <b>创意交给模型</b><span>姓名、外貌、重要之人、意义非凡之地，都由描述长出来</span></div></div>
+      <div class="pt"><div class="ic">📏</div><div class="tx">
+        <b>规则锁在本地</b><span>点数怎么分、哪个技能算本职，都是本机按规则书算，不听模型的</span></div></div>
+      <div class="pt hot"><div class="ic">🔌</div><div class="tx">
+        <b>不配 Key 也照样能用</b><span>AI 只是可选加速器；关掉它，随机卡与手动车卡一样完整</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div style="position:absolute; left:0; top:74px; width:470px;">
+      <div class="side-h">四个环节，只有第二个是模型</div>
+      <div class="flow">
+        <div class="node"><b>① 你的一句话</b><span>「民国时期的私家侦探，前警察」</span></div>
+        <div class="arrow"><i></i><em>发出去</em></div>
+        <div class="node model"><b>② 模型：只出创意</b><span>背景故事 · 外貌 · 人脉 · 重要之物</span></div>
+        <div class="arrow"><i></i><em>拿回来本地校准</em></div>
+        <div class="node local"><b>③ 本地引擎：算规则</b><span>属性压缩 · 职业技能点 · 职业限制 · 技能上限</span></div>
+        <div class="arrow"><i></i><em>不通过就重算</em></div>
+        <div class="node local"><b>④ 一张合规的完整卡</b><span>与随机卡走同一套校验，可直接上桌</span></div>
+      </div>
+      <div style="margin-top:14px; font-size:12.5px; color:var(--ink-3); line-height:1.7;">
+        模型没按要求输出也没关系 —— 本地会再校准一次；
+        完全不达标就退回本机掷骰，绝不会给你一张算错的卡。
+      </div>
+    </div>
+    <div class="phone" style="left:552px; top:96px;">
+      <img src="./v_07_ai.png" alt="AI 车卡面板">
+      <div class="cap">✨ AI 车卡面板</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">💬 一句话成卡</div>
+    <div class="chip">🧠 创意归模型</div>
+    <div class="chip">📏 规则归本地</div>
+    <div class="chip">🔌 支持 DeepSeek 等兼容接口</div>
+  </div>
+  <div class="seal"><b>AI</b><b>可选</b><span>不用也能车卡</span></div>
+</section>
+
+
+<!-- ============================================================
+     06 · 房规数值上限
+     ============================================================ -->
+<section class="slide" id="sp6" data-name="sp-06-caps">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">房规可调</div><div class="badge">三种车卡都生效</div>
+      <div class="badge idx">06 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">房规</div>
+    <h1>三条上限线<em>三种车卡一视同仁</em></h1>
+    <div class="sub">
+      属性总和、本职技能、兴趣技能各设一条线。
+      <b>随机卡、AI 卡、手动车卡吃同一套上限口径</b>，不存在「只约束一种车卡方式」的漏洞。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🎛</div><div class="tx">
+        <b>改完立刻生效</b><span>不用重开应用；整批 5 张共用同一份口径，不会中途换标准</span></div></div>
+      <div class="pt"><div class="ic">🧮</div><div class="tx">
+        <b>属性超限按比例压缩</b><span>保住人物特征，不会把某一项直接砍成废人</span></div></div>
+      <div class="pt hot"><div class="ic">🕳</div><div class="tx">
+        <b>留空 = 不限</b><span>99 一律视为「不限」；不设上限时不显示任何提示</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div style="position:absolute; left:0; top:74px; width:470px;">
+      <div class="side-h">三条线（示例值）</div>
+      <div class="capline">
+        <div class="lb"><b>属性总和上限</b><span>≤ 480</span></div>
+        <div class="bar"><i style="width:80%;"></i><u style="left:80%;"></u></div>
+        <div style="font-size:11.5px; color:var(--ink-3); margin-top:6px;">九项合计超过就整体压缩，等比降下来</div>
+      </div>
+      <div class="capline">
+        <div class="lb"><b>每项本职技能上限</b><span>≤ 80</span></div>
+        <div class="bar"><i style="width:66.7%;"></i><u style="left:66.7%;"></u></div>
+        <div style="font-size:11.5px; color:var(--ink-3); margin-top:6px;">点数总额不变，只是每一项到 80 就封顶</div>
+      </div>
+      <div class="capline">
+        <div class="lb"><b>每项兴趣技能上限</b><span>≤ 60</span></div>
+        <div class="bar"><i style="width:50%;"></i><u style="left:50%;"></u></div>
+        <div style="font-size:11.5px; color:var(--ink-3); margin-top:6px;">个人特长与时代特长的走法也按这条算</div>
+      </div>
+      <div style="margin-top:6px; font-size:12.5px; color:var(--ink-3); line-height:1.7;">
+        入口：<b style="color:#5a4f3c;">菜单 → 🤖 AI 设置 → 数值上限</b>；
+        也可以在第 0 步直接点「🎛 设置属性 / 技能上限」跳过去。
+      </div>
+    </div>
+    <div class="phone" style="left:552px; top:96px;">
+      <img src="./v_08_caps.png" alt="数值上限设置">
+      <div class="cap">🎛 第 0 步点一下就能跳到这里</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🎛 属性总和一条线</div>
+    <div class="chip">📗 本职技能一条线</div>
+    <div class="chip">📘 兴趣技能一条线</div>
+    <div class="chip">🔁 三种车卡方式都生效</div>
+  </div>
+  <div class="seal"><b>房规</b><b>可调</b><span>三种车卡统一</span></div>
+</section>
+
+
+<!-- ============================================================
+     07 · 规则自动校验
+     ============================================================ -->
+<section class="slide" id="sp7" data-name="sp-07-validate">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+      <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">自动校验</div><div class="badge">保存前 10 项体检</div>
+      <div class="badge idx">07 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">不会算错</div>
+    <h1>超支就锁住下一步<em>保存前还跑 10 项</em></h1>
+    <div class="sub">
+      购点超了会<b>直接拦住「下一步」</b>，并把差多少点写在按钮旁边；
+      保存之前再跑<b>10 项完整性检查</b>，缺什么逐条列出来。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🔒</div><div class="tx">
+        <b>硬拦截，不是提醒</b><span>属性总量超上限时「下一步」不让你走，先减点再说</span></div></div>
+      <div class="pt"><div class="ic">🔢</div><div class="tx">
+        <b>差多少点算给你看</b><span>「已用 640 / 上限 550 / 超出 90 点 · 需减少的点数」</span></div></div>
+      <div class="pt hot"><div class="ic">🩺</div><div class="tx">
+        <b>派生值全部自动算</b><span>HP / MP / SAN / MOV / 体格 / 伤害加值，年龄调整也一样</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div style="position:absolute; left:0; top:64px; width:470px;">
+      <div class="side-h">保存前会检查这些（节选）</div>
+      <div class="row good"><div class="k">✓</div><div class="t">属性购点总量<small>含 / 不含幸运两套口径</small></div></div>
+      <div class="row good"><div class="k">✓</div><div class="t">职业技能点 / 兴趣技能点<small>超额是硬错误，没用完会提醒</small></div></div>
+      <div class="row good"><div class="k">✓</div><div class="t">单项技能上限<small>超出会点名是哪一项</small></div></div>
+      <div class="row good"><div class="k">✓</div><div class="t">职业限制与信用评级<small>信用评级必须在职业区间内</small></div></div>
+      <div class="row bad" style="background:rgba(255,245,244,.94); margin-top:14px;">
+        <div class="k">!</div>
+        <div class="t" style="text-decoration:none;">属性总和 640 超出上限 550，请减少 90 点
+          <small>—— 就是右边这张图里真实弹出的那句话</small></div>
+      </div>
+    </div>
+    <div class="phone" style="left:552px; top:96px;">
+      <img src="./v_11_overflow.png" alt="购点超支时的拦截状态">
+      <div class="cap">🔒 超支时：红字标出「超出 90」，下一步被拦住</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🔒 超支锁下一步</div>
+    <div class="chip">🔢 明说差多少点</div>
+    <div class="chip">🩺 10 项完整性检查</div>
+    <div class="chip">🧮 派生值自动算</div>
+  </div>
+  <div class="seal"><b>算不错</b><span>规则书为准</span></div>
+</section>
+
+
+<!-- ============================================================
+     08 · 一键长图 / 只读分享
+     ============================================================ -->
+<section class="slide" id="sp8" data-name="sp-08-share">
+  <div class="bg-layer">
+    <div class="bg-base"></div><div class="bg-grid"></div>
+    <svg class="bg-rings" viewBox="0 0 1000 1000">
+      <circle cx="500" cy="500" r="480"/><circle cx="500" cy="500" r="400" class="thin"/>
+      <circle cx="500" cy="500" r="320"/><circle cx="500" cy="500" r="200" class="thin"/>
+      <circle cx="500" cy="500" r="120"/>
+      <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+      <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+    </svg>
+    <div class="bg-dashed"></div>
+  </div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🃏</div>
+      <div class="brand-tx"><b>跑团车卡器</b><span>COC 7TH CHARACTER SHEET</span></div>
+    </div>
+    <div class="badges">
+      <div class="badge">一键长图</div><div class="badge">只读分享</div>
+      <div class="badge idx">08 / 08</div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div class="kicker">分享</div>
+    <h1>队友不用装 App<em>浏览器打开就能看</em></h1>
+    <div class="sub">
+      一键把角色卡导出成<b>一张长图</b>，或者生成一个<b>只读链接</b>。
+      发给 KP 和队友，他们用浏览器就能看到完整角色卡 —— 不用装任何东西，也改不了你的卡。
+    </div>
+    <div class="points">
+      <div class="pt"><div class="ic">🖼</div><div class="tx">
+        <b>长图直接存相册</b><span>状态 / 属性 / 主要技能 / 武器 / 资产，一张图从头到尾</span></div></div>
+      <div class="pt"><div class="ic">🔗</div><div class="tx">
+        <b>只读链接，谁也改不了</b><span>打开就是看，改不了数据；删除分享需要管理口令</span></div></div>
+      <div class="pt hot"><div class="ic">🏠</div><div class="tx">
+        <b>服务可以自己搭</b><span>后端程序随开源项目提供，部署在自己的机器上，卡还是你自己的</span></div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone" style="left:0; top:96px;">
+      <img src="./v_15_card.png" alt="角色卡页">
+      <div class="cap">📱 本机角色卡 · 一键导出或分享</div>
+    </div>
+    <div style="position:absolute; left:342px; top:340px; width:66px; text-align:center;">
+      <div style="font-size:30px; color:var(--gold); line-height:1;">→</div>
+      <div style="font-size:11px; color:var(--ink-3); margin-top:5px; letter-spacing:.06em;">一键</div>
+    </div>
+    <div class="frame" style="left:430px; top:64px; width:400px;">
+      <div class="fadebot" style="height:470px;">
+        <img src="./v_12_longimg.png" alt="实际导出的长图" style="width:378px;">
+      </div>
+      <div class="tag">🖼 实际导出效果 · 1440 × 2240 px</div>
+    </div>
+    <div style="position:absolute; left:430px; top:606px; width:400px;">
+      <div class="linkpill">
+        <span class="lk">只读</span>
+        <span class="u">https://你的分享服务/coc/s/&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+      </div>
+      <div style="font-size:11.5px; color:var(--ink-3); margin-top:9px; line-height:1.7;">
+        链接为自己部署的分享服务生成；<br>不配置也不影响本地导出长图。
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="chip">🖼 一键导出长图</div>
+    <div class="chip">🔗 只读分享链接</div>
+    <div class="chip">🙅 队友无需安装 App</div>
+    <div class="chip">🏠 分享服务可自建</div>
+  </div>
+  <div class="seal"><b>分享</b><b>只读</b><span>队友免安装</span></div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#f2efe9">
+  <meta name="format-detection" content="telephone=no">
+  <title>骰境 TRPG</title>
+  <link rel="icon" href="img/logo-192.png">
+  <link rel="apple-touch-icon" href="img/logo-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- 数据层（由 Excel 资料生成） -->
+  <!-- 版本配置必须最先加载：其他模块会读 BuildConfig -->
+  <script src="js/core/build-config.js"></script>
+  <!-- 暗号门（部署版私有访问控制；开源版 gateCode 为空时完全透明） -->
+  <script src="js/core/gate.js"></script>
+
+  <script src="js/data/skills.js"></script>
+  <script src="js/data/occupations.js"></script>
+  <script src="js/data/weapons.js"></script>
+  <script src="js/data/armors.js"></script>
+  <script src="js/data/vehicles.js"></script>
+  <script src="js/data/madness.js"></script>
+  <script src="js/data/spells.js"></script>
+  <script src="js/data/assets.js"></script>
+
+  <!-- 规则层（与界面完全分离） -->
+  <script src="js/core/dice.js"></script>
+  <script src="js/core/rules-coc7.js"></script>
+  <script src="js/core/occupation.js"></script>
+  <script src="js/core/skillmodel.js"></script>
+  <script src="js/core/engine.js"></script>
+  <script src="js/core/store.js"></script>
+  <script src="js/core/madness.js"></script>
+  <script src="js/core/personas.js"></script>
+  <script src="js/core/avatar.js"></script>
+  <script src="js/core/easter-egg.js"></script>
+  <script src="js/core/preset.js"></script>
+  <script src="js/core/ai.js"></script>
+  <script src="js/core/share.js"></script>
+
+  <!-- 跑团房间：规则服务 → 数据模型 → 设备标识 → 传输层 → 本地存档（顺序不可乱，逐层依赖） -->
+  <script src="js/core/room-rules.js"></script>
+  <script src="js/core/room-model.js"></script>
+  <!-- v2.0.2 T1：设备标识须在 room-net.js 之前加载（room-net 惰性调用 DeviceId.get） -->
+  <script src="js/core/device-id.js"></script>
+  <script src="js/core/room-net.js"></script>
+  <script src="js/core/room-lan.js"></script>
+  <script src="js/core/room-store.js"></script>
+
+  <!-- 界面层 -->
+  <script src="js/ui/components.js"></script>
+  <script src="js/ui/share-ui.js"></script>
+  <script src="js/ui/step-start.js"></script>
+  <script src="js/ui/steps-a.js"></script>
+  <script src="js/ui/steps-b.js"></script>
+  <script src="js/ui/steps-c.js"></script>
+  <script src="js/ui/steps-d.js"></script>
+  <script src="js/ui/sheet.js"></script>
+  <script src="js/ui/room-panels.js"></script>
+  <script src="js/ui/room-ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

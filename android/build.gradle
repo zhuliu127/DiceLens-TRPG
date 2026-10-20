@@ -1,0 +1,4 @@
+// COC 7th 调查员车卡器 —— 根构建脚本
+plugins {
+    id 'com.android.application' version '8.4.2' apply false
+}

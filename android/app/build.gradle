@@ -1,0 +1,118 @@
+plugins {
+    id 'com.android.application'
+}
+
+/* ============================================================
+ * 打包配置
+ *
+ * 用 -Pedition=<self|oss> 选择要构建的版本（缺省 oss，最安全的默认值）：
+ *
+ *   self  自用版：预置自有分享服务地址，applicationId 不带后缀
+ *   oss   开源版：不预置任何服务地址，applicationId 加 .oss 后缀
+ *                 —— 与自用版包名不同，可同时装在一台手机上
+ *
+ * 签名口令不写在本文件里，从 android/local.properties 读取
+ * （该文件已进 .gitignore，不会随开源代码发布）。
+ * 没配签名时自动回退到 debug 签名 —— 别人 clone 下来零配置也能先跑起来。
+ *
+ * 用法：
+ *   gradle assembleRelease -Pedition=self
+ *   gradle assembleRelease -Pedition=oss
+ * ============================================================ */
+
+def edition = (project.findProperty('edition') ?: 'oss').toString().toLowerCase()
+if (!(edition in ['self', 'oss'])) {
+    throw new GradleException("edition 只能是 self 或 oss，当前传入：${edition}")
+}
+def isSelf = edition == 'self'
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def hasReleaseSigning = localProps.getProperty('storePassword') != null
+
+android {
+    namespace 'com.teaegg.coc7card'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId isSelf ? 'com.teaegg.coc7card' : 'com.teaegg.coc7card.oss'
+        minSdk 24
+        targetSdk 34
+        versionCode 79
+        versionName "2.13.13"
+        resConfigs "zh", "en"
+
+        // 两版同时装在一台机器上要能分辨出来（原值在 strings.xml，已移到这里）
+        resValue 'string', 'app_name', isSelf ? '骰境 TRPG' : '骰境 TRPG OSS'
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(localProps.getProperty('storeFile', 'app/keystore/coc7.jks'))
+                storePassword localProps.getProperty('storePassword')
+                keyAlias localProps.getProperty('keyAlias', 'coc7')
+                keyPassword localProps.getProperty('keyPassword')
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            shrinkResources false
+            // 没配签名就退回 debug 签名，而不是直接构建失败
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += ['META-INF/**']
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+/* ---------- 把 Web 应用同步进 assets ---------- */
+
+// 每次构建前全量同步。必须禁止 up-to-date 判定：
+// self 与 oss 交替构建时，上一版被覆盖进 assets 的 build-config.js
+// 会残留下来，导致开源版里带着自用版的服务地址。
+tasks.register('syncWeb', Copy) {
+    from rootProject.file('../web')
+    into layout.projectDirectory.dir('src/main/assets')
+    // v2.0.2：排除编辑器/手动产生的 *.bak —— 否则 web/ 下的备份会被整包拷进
+    // assets 并打进 APK。Copy 任务不会删除目标目录里的陈旧文件，故历史残留
+    // （src/main/assets 下已有的 .bak）需手动清理，此 exclude 只防复发。
+    exclude '**/*.bak'
+    outputs.upToDateWhen { false }
+}
+
+// 自用版额外用 edition/self/build-config.js 覆盖开源版的默认配置。
+// edition/ 目录已进 .gitignore，不会随开源代码发布。
+tasks.register('applyEdition', Copy) {
+    def cfg = rootProject.file("../edition/${edition}/build-config.js")
+    onlyIf { cfg.exists() }
+    from cfg
+    into layout.projectDirectory.dir('src/main/assets/js/core')
+    outputs.upToDateWhen { false }
+}
+
+tasks.named('applyEdition').configure { mustRunAfter 'syncWeb' }
+tasks.named('preBuild').configure { dependsOn 'syncWeb', 'applyEdition' }

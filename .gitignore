@@ -1,0 +1,67 @@
+# ============================================================
+# 跑团车卡器 · 忽略规则
+# ============================================================
+
+# ---------- 构建产物 ----------
+build/
+android/build/
+android/app/build/
+.gradle/
+android/.gradle/
+dist/
+*.apk
+*.aab
+
+# ---------- 本地配置与签名（绝不入库）----------
+local.properties
+android/local.properties
+android/app/keystore/
+*.jks
+*.keystore
+
+# ---------- 版本私有配置 ----------
+# edition/self/ 里预置了作者自己的分享服务地址，
+# 只用于打包自用版，不随开源代码发布。
+edition/
+
+# ---------- 私有部署笔记 ----------
+# 含真实服务器信息（IP / 部署路径 / 运维命令）
+private/
+
+# ---------- 开发过程产物 ----------
+tools/shots*/
+tools/dbg*
+tools/probe*
+tools/chk_*
+tools/fix_*
+tools/scan_*
+tools/_*
+!tools/_stat.js
+
+# ---------- 运行时缓存 ----------
+__pycache__/
+*.pyc
+.pytest_cache/
+test-results/
+playwright-report/
+
+# ---------- 编辑器 / 系统 ----------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# ---------- 生成的 Android 资源副本 ----------
+# syncWeb 会把 web/ 复制到这里；自用版构建还会用 edition/ 覆盖成含私有地址的配置。
+# 它是**生成物**，克隆后首次构建自动生成，不入库。
+android/app/src/main/assets/
+
+# ---------- Windows 保留设备名文件 ----------
+NUL
+
+# ---------- 旧备份 ----------
+*.bak
+
+# ---------- 内部文档（含服务器运维细节，不随开源发布）----------
+docs/

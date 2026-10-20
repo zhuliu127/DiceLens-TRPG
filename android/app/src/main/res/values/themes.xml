@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 状态栏始终使用深色底 + 浅色图标，避免与 Web 内容出现割裂 -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/appBg</item>
+        <item name="android:statusBarColor">@color/appBg</item>
+        <item name="android:navigationBarColor">@color/appBg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

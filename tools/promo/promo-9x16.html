@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>跑团车卡器 · 推广图 9:16</title>
+<style>
+/* ============================================================
+   跑团车卡器 推广图（1080×1920，9:16）· v1.15.0
+   竖屏版：标题 → 真机角色卡 → 卖点网格 → 底栏
+   配色与 16:9 版一致，取自 app 自身的 CSS 变量
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --gold:#a8791a; --gold-2:#d4a94a; --gold-lt:#f0c96a;
+  --arcane:#6a5cc4; --arcane-2:#8a7de0;
+  --ink:#221c12; --ink-2:#5a4f3c; --ink-3:#8b7f6a;
+  --paper:#f2efe9; --paper-2:#e9e4da;
+  --teal:#2f8878;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --sans:"PingFang SC","Noto Sans SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+}
+body{
+  width:1080px; height:1920px; overflow:hidden;
+  font-family:var(--sans); color:var(--ink);
+  background:var(--paper); position:relative;
+}
+
+/* ---------- 背景 ---------- */
+.bg-layer{ position:absolute; inset:0; z-index:0; }
+.bg-base{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(120% 60% at 78% 4%,  rgba(212,169,74,.22) 0%, rgba(212,169,74,0) 60%),
+    radial-gradient(90% 50% at 6% 98%,  rgba(106,92,196,.16) 0%, rgba(106,92,196,0) 62%),
+    linear-gradient(170deg, #faf8f3 0%, #f2efe9 44%, #e7e1d5 100%);
+}
+.bg-rings{ position:absolute; right:-320px; top:-330px; width:1240px; height:1240px; opacity:.13; }
+.bg-rings circle{ fill:none; stroke:var(--gold); stroke-width:1.2; }
+.bg-rings .thin{ stroke-width:.7; }
+.bg-dashed{ position:absolute; left:-180px; bottom:-160px; width:760px; height:760px; opacity:.09;
+  background:repeating-conic-gradient(from 0deg, var(--gold) 0deg 1deg, transparent 1deg 30deg);
+  -webkit-mask:radial-gradient(circle, transparent 66%, #000 66.5%, #000 68%, transparent 68.5%);
+          mask:radial-gradient(circle, transparent 66%, #000 66.5%, #000 68%, transparent 68.5%);
+  border-radius:50%;
+}
+.bg-grid{
+  position:absolute; inset:0; opacity:.26;
+  background-image:
+    linear-gradient(rgba(30,24,12,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,24,12,.05) 1px, transparent 1px);
+  background-size:60px 60px;
+  -webkit-mask:linear-gradient(170deg, #000 0%, #000 46%, transparent 82%);
+          mask:linear-gradient(170deg, #000 0%, #000 46%, transparent 82%);
+}
+
+/* ---------- 顶栏 ---------- */
+.top{
+  position:absolute; left:76px; right:76px; top:70px; z-index:5;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.brand{ display:flex; align-items:center; gap:15px; }
+.brand-logo{
+  width:60px; height:60px; border-radius:16px;
+  background:linear-gradient(150deg, var(--gold-2), #7a5c14);
+  box-shadow:0 6px 20px rgba(168,121,26,.34), inset 0 1px 0 rgba(255,255,255,.34);
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+}
+.brand-tx b{ display:block; font-family:var(--serif); font-size:25px; letter-spacing:.14em; font-weight:800; }
+.brand-tx span{ display:block; font-size:11.5px; color:var(--ink-3); letter-spacing:.26em; margin-top:3px; }
+.badges{ display:flex; gap:8px; }
+.badge{
+  font-size:12.5px; font-weight:600; color:var(--gold);
+  background:rgba(212,169,74,.13); border:1px solid rgba(168,121,26,.32);
+  padding:7px 13px; border-radius:999px;
+}
+.badge.alt{ color:var(--arcane); background:rgba(106,92,196,.11); border-color:rgba(106,92,196,.30); }
+
+/* ---------- 标题区 ---------- */
+.copy{ position:absolute; left:76px; right:76px; top:160px; z-index:5; text-align:center; }
+.kicker{
+  display:inline-flex; align-items:center; gap:9px;
+  font-size:13.5px; font-weight:700; letter-spacing:.20em; color:var(--gold);
+  margin-bottom:16px;
+}
+h1{
+  font-family:var(--serif); font-size:64px; line-height:1.14; font-weight:900;
+  letter-spacing:.012em; color:#1b160d;
+}
+h1 em{
+  font-style:normal; display:block;
+  background:linear-gradient(96deg, #d4a94a 6%, #8a6210 60%, #6a5cc4 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.sub{
+  margin:18px auto 0; font-size:18.5px; line-height:1.7; color:var(--ink-2);
+  max-width:860px;
+}
+.sub b{ color:var(--ink); font-weight:700; }
+
+/* ---------- 手机 ---------- */
+.phone-wrap{ position:absolute; left:0; right:0; top:452px; z-index:4;
+  display:flex; justify-content:center; }
+.phone{
+  position:relative; width:430px; border-radius:40px;
+  background:#14110c; padding:8px;
+  box-shadow:0 34px 70px rgba(45,32,10,.26), 0 6px 18px rgba(45,32,10,.16);
+  border:1px solid rgba(255,255,255,.14);
+}
+.phone img{
+  display:block; width:100%; border-radius:32px;
+  height:896px; object-fit:cover; object-position:top center;
+}
+.phone .cap{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:-36px;
+  white-space:nowrap; font-size:13px; color:var(--ink-3); letter-spacing:.04em;
+  background:rgba(255,255,255,.80); border:1px solid rgba(30,24,12,.08);
+  padding:6px 14px; border-radius:999px;
+}
+/* 手机两侧的浮动标签（简短，不抢戏） */
+.tag{
+  position:absolute; z-index:8; white-space:nowrap;
+  background:#fff; border:1px solid rgba(30,24,12,.12);
+  border-radius:11px; padding:8px 13px;
+  font-size:12.5px; color:var(--ink-2); line-height:1.35;
+  box-shadow:0 8px 20px rgba(45,32,10,.14);
+}
+.tag b{ color:var(--gold); }
+.tag.t1{ left:44px; top:180px; }
+.tag.t2{ right:44px; top:430px; }
+.tag.t3{ left:44px; top:640px; }
+
+/* ---------- 卖点网格 ---------- */
+.feats{
+  position:absolute; left:76px; right:76px; top:1424px; z-index:5;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px 16px;
+}
+.feat{
+  display:flex; gap:11px; align-items:flex-start;
+  background:rgba(255,255,255,.74);
+  border:1px solid rgba(30,24,12,.10);
+  border-radius:13px; padding:12px 14px;
+  box-shadow:0 2px 10px rgba(60,45,20,.045);
+}
+.feat .ic{ font-size:21px; line-height:1.15; flex:0 0 auto; }
+.feat .tx b{ display:block; font-size:15.5px; font-weight:700; color:#241d11; }
+.feat .tx span{ display:block; font-size:12px; color:var(--ink-3); margin-top:3px; line-height:1.5; }
+.feat.hot{ background:rgba(255,250,238,.94); border-color:rgba(168,121,26,.42); }
+.feat.hot .tx b{ color:#8a6210; }
+
+/* ---------- 底栏 ---------- */
+.foot{
+  position:absolute; left:76px; right:76px; bottom:58px; z-index:5;
+  display:flex; align-items:center; justify-content:center; gap:12px;
+}
+.chip{
+  font-size:13px; color:var(--ink-2);
+  background:rgba(255,255,255,.72); border:1px solid rgba(30,24,12,.11);
+  padding:9px 15px; border-radius:10px;
+}
+.chip b{ color:var(--gold); font-weight:700; }
+
+/* ---------- 印章 ---------- */
+.seal{
+  position:absolute; right:50px; top:1236px; z-index:6;
+  width:96px; height:96px; border-radius:50%;
+  border:2.5px solid rgba(168,121,26,.42);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--gold); text-align:center; transform:rotate(-9deg);
+  background:rgba(255,255,255,.50);
+}
+.seal b{ font-family:var(--serif); font-size:17.5px; letter-spacing:.10em; line-height:1.16; }
+.seal span{ font-size:8.5px; letter-spacing:.10em; margin-top:3px; color:var(--ink-3); }
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-base"></div>
+  <div class="bg-grid"></div>
+  <svg class="bg-rings" viewBox="0 0 1000 1000">
+    <circle cx="500" cy="500" r="480"/>
+    <circle cx="500" cy="500" r="400" class="thin"/>
+    <circle cx="500" cy="500" r="320"/>
+    <circle cx="500" cy="500" r="200" class="thin"/>
+    <circle cx="500" cy="500" r="120"/>
+    <path d="M500 20 L500 980 M20 500 L980 500" class="thin"/>
+    <path d="M163 163 L837 837 M837 163 L163 837" class="thin"/>
+  </svg>
+  <div class="bg-dashed"></div>
+</div>
+
+<!-- 顶栏 -->
+<div class="top">
+  <div class="brand">
+    <div class="brand-logo">🃏</div>
+    <div class="brand-tx">
+      <b>跑团车卡器</b>
+      <span>COC 7TH CHARACTER SHEET</span>
+    </div>
+  </div>
+  <div class="badges">
+    <div class="badge">完全离线</div>
+    <div class="badge alt">开源免费</div>
+  </div>
+</div>
+
+<!-- 标题 -->
+<div class="copy">
+  <div class="kicker">COC 7e · 不用注册 · 不用联网</div>
+  <h1>开团前一分钟<em>也能车出一张卡</em></h1>
+  <div class="sub">
+    点一下，<b>5 张完整调查员</b>摆在面前 —— 属性、技能、装备、背景全填好，选中就能上桌。
+  </div>
+</div>
+
+<!-- 手机 -->
+<div class="phone-wrap">
+  <div class="phone">
+    <img src="./v_05_card.png" alt="角色卡">
+    <div class="cap">完整角色卡 · 状态与属性一览</div>
+  </div>
+  <div class="tag t1">⚔ 跑团中改 <b>HP / SAN</b></div>
+  <div class="tag t2"><b>疯狂状态</b> 200 条症状可掷</div>
+  <div class="tag t3">SAN 上限可被法术<b>永久削减</b></div>
+</div>
+
+<!-- 印章 -->
+<div class="seal">
+  <b>开源</b>
+  <b>免费</b>
+  <span>无广告 · 无内购</span>
+</div>
+
+<!-- 卖点 -->
+<div class="feats">
+  <div class="feat"><div class="ic">🎲</div><div class="tx">
+    <b>三种车卡方式</b><span>随机 5 张 / AI 一句话 / 逐步手搓</span></div></div>
+  <div class="feat"><div class="ic">🌍</div><div class="tx">
+    <b>古今中外 12 套世界</b><span>姓名·籍贯·装备全部自洽</span></div></div>
+  <div class="feat"><div class="ic">🥚</div><div class="tx">
+    <b>29 位彩蛋角色</b><span>跑团成员 + 名人，抽到就跑</span></div></div>
+  <div class="feat hot"><div class="ic">🎛</div><div class="tx">
+    <b>房规数值上限</b><span>属性总和 / 本职 / 兴趣各一条线</span></div></div>
+  <div class="feat"><div class="ic">📖</div><div class="tx">
+    <b>COC 7e 规则内</b><span>230 职业 · 年龄调整 · 教育检定</span></div></div>
+  <div class="feat"><div class="ic">🔒</div><div class="tx">
+    <b>数据只在本机</b><span>不上传、不注册、无内购</span></div></div>
+</div>
+
+<!-- 底栏 -->
+<div class="foot">
+  <div class="chip">🎭 拔尖优先 <b>侦查 85</b></div>
+  <div class="chip">📜 长图 + <b>只读分享</b></div>
+  <div class="chip">🔒 <b>完全离线</b></div>
+</div>
+
+</body>
+</html>

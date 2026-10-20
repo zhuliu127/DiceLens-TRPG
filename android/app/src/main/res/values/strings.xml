@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用名由 build.gradle 按 edition 用 resValue 提供：
+     self → 骰境 TRPG / oss → 骰境 TRPG OSS
+     在这里写 app_name 会和 resValue 冲突（duplicate resource）。 -->
+<resources>
+</resources>

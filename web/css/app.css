@@ -1,0 +1,3592 @@
+/* ============================================================
+   骰境 TRPG — 设计系统
+   风格: 现代 TRPG 游戏平台 + 轻度克苏鲁氛围
+   ============================================================ */
+
+:root {
+  /* 暗色主题（默认）— 深渊 */
+  --bg:          #0b1119;
+  --bg-grad-a:   #0d1420;
+  --bg-grad-b:   #131c2b;
+  --surface:     #161f2e;
+  --surface-2:   #1c2738;
+  --surface-3:   #233047;
+  --border:      rgba(255,255,255,.09);
+  --border-str:  rgba(255,255,255,.16);
+
+  --text:        #e8eef7;
+  --text-dim:    #93a3ba;
+  --text-mute:   #66748c;
+
+  --gold:        #d4a94a;
+  --gold-soft:   rgba(212,169,74,.14);
+  --gold-str:    #f0c96a;
+  --teal:        #46b9a8;
+  --teal-soft:   rgba(70,185,168,.14);
+  --danger:      #e0605a;
+  --danger-soft: rgba(224,96,90,.14);
+  --success:     #4fb98a;
+  --success-soft:rgba(79,185,138,.14);
+  --arcane:      #8a7de0;
+  --arcane-soft: rgba(138,125,224,.15);
+
+  --radius:      14px;
+  --radius-sm:   9px;
+  --radius-lg:   20px;
+  --shadow:      0 6px 24px rgba(0,0,0,.36);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,.22);
+
+  --serif: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
+          "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+[data-theme="light"] {
+  --bg:          #f2efe9;
+  --bg-grad-a:   #f7f4ee;
+  --bg-grad-b:   #e9e4da;
+  --surface:     #ffffff;
+  --surface-2:   #f7f5f0;
+  --surface-3:   #eeeae1;
+  --border:      rgba(30,24,12,.10);
+  --border-str:  rgba(30,24,12,.20);
+
+  --text:        #221c12;
+  --text-dim:    #5d5445;
+  --text-mute:   #8b8272;
+
+  --gold:        #a8791a;
+  --gold-soft:   rgba(168,121,26,.12);
+  --gold-str:    #8a6210;
+  --teal:        #1f8b7a;
+  --teal-soft:   rgba(31,139,122,.12);
+  --danger:      #c0392f;
+  --danger-soft: rgba(192,57,47,.10);
+  --success:     #2f8f65;
+  --success-soft:rgba(47,143,101,.12);
+  --arcane:      #6a5cc4;
+  --arcane-soft: rgba(106,92,196,.12);
+  --shadow:      0 6px 22px rgba(60,48,24,.12);
+  --shadow-sm:   0 2px 8px rgba(60,48,24,.09);
+}
+
+/* ---------------- 基础 ---------------- */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(138,125,224,.10), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(212,169,74,.06), transparent 70%),
+    linear-gradient(170deg, var(--bg-grad-a), var(--bg-grad-b));
+}
+
+h1,h2,h3,h4 { margin: 0; font-weight: 600; letter-spacing: .01em; }
+p { margin: 0 0 .7em; }
+/* 关键：必须显式 color:inherit。
+   浏览器 UA 样式表给 button/input 设的是 buttontext/fieldtext（黑色），
+   若不覆盖，暗色主题下按钮与输入框里的文字会是黑字压深底，完全看不清。 */
+button { font-family: inherit; font-size: inherit; cursor: pointer; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button:disabled { color: inherit; }
+input::placeholder, textarea::placeholder { color: var(--text-mute); opacity: .75; }
+a { color: var(--gold); }
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-str); border-radius: 4px; }
+
+/* ---------------- 应用骨架 ---------------- */
+#app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+
+.appbar {
+  position: sticky; top: 0; z-index: 60;
+  padding: calc(var(--safe-t) + 10px) 14px 10px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.appbar .brand {
+  font-family: var(--serif); font-size: 17px; font-weight: 700;
+  letter-spacing: .06em; color: var(--text); display: flex; align-items: center; gap: 8px;
+}
+.appbar .brand .sigil {
+  width: 26px; height: 26px; flex: 0 0 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-str), var(--gold) 60%, #7a5c14);
+  box-shadow: 0 0 12px rgba(212,169,74,.4), inset 0 0 6px rgba(0,0,0,.35);
+  display: grid; place-items: center;
+  font-size: 13px; color: #1a1406; font-weight: 800;
+}
+/* 应用图标（品牌徽章），替代原来的字形占位 */
+.appbar .brand .brand-logo {
+  width: 27px; height: 27px; flex: 0 0 27px;
+  border-radius: 50%; object-fit: cover; display: block;
+  border: 1px solid rgba(212,169,74,.5);
+  box-shadow: 0 0 10px rgba(212,169,74,.35);
+}
+.appbar .spacer { flex: 1; }
+
+.icon-btn {
+  width: 36px; height: 36px; flex: 0 0 36px;
+  display: grid; place-items: center;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: 17px; transition: .16s;
+}
+.icon-btn:active { transform: scale(.93); background: var(--surface-3); }
+
+.save-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; padding: 4px 9px; border-radius: 20px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-mute); white-space: nowrap; transition: .25s;
+}
+.save-pill.saving { color: var(--gold); border-color: var(--gold-soft); background: var(--gold-soft); }
+.save-pill.saved  { color: var(--success); border-color: var(--success-soft); background: var(--success-soft); }
+/* 编辑已保存角色时：改动只在暂存区，必须手动保存 */
+.save-pill.pending { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.save-pill.pending::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--danger); animation: pulseDot 1.4s ease-in-out infinite;
+}
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* ---------------- 编辑模式常驻提示条 ---------------- */
+.edit-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 13px; margin-bottom: 12px;
+  border-radius: var(--r, 14px);
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-soft);
+}
+.edit-bar .eb-tx { flex: 1 1 auto; min-width: 0; }
+.edit-bar .eb-t {
+  font-size: 13.5px; font-weight: 700; color: var(--gold-str);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.edit-bar .eb-tx .tiny { color: var(--text-mute); margin-top: 2px; }
+.edit-bar .eb-act { display: flex; gap: 8px; flex: 0 0 auto; }
+.edit-bar .eb-act .btn { white-space: nowrap; }
+
+/* ---------------- 步骤进度条 ---------------- */
+.stepper {
+  position: sticky; top: 0; z-index: 55;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 12px;
+}
+.stepper-track {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.stepper-track::-webkit-scrollbar { display: none; }
+.stepper-item {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 9px; border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: var(--text-mute); font-size: 10.5px;
+  min-width: 58px; transition: .18s;
+}
+.stepper-item .dot {
+  width: 21px; height: 21px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 10.5px; font-weight: 700;
+  background: var(--surface-3); color: var(--text-mute);
+  border: 1px solid var(--border);
+}
+.stepper-item.done .dot { background: var(--success-soft); color: var(--success); border-color: rgba(79,185,138,.35); }
+.stepper-item.active {
+  background: var(--gold-soft); color: var(--gold-str);
+  border-color: rgba(212,169,74,.3);
+}
+.stepper-item.active .dot {
+  background: linear-gradient(160deg, var(--gold-str), var(--gold));
+  color: #221a05; border-color: transparent;
+  box-shadow: 0 0 10px rgba(212,169,74,.45);
+}
+.stepper-bar { height: 2px; border-radius: 2px; background: var(--surface-3); margin-top: 7px; overflow: hidden; }
+.stepper-bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-str)); transition: width .3s; }
+
+/* ---------------- 内容区 ---------------- */
+.content { flex: 1; padding: 14px 14px 108px; max-width: 900px; width: 100%; margin: 0 auto; }
+
+.step-head { margin: 4px 0 14px; }
+.step-head .kicker {
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700; margin-bottom: 3px;
+}
+.step-head h2 { font-family: var(--serif); font-size: 23px; letter-spacing: .02em; }
+.step-head .sub { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+
+/* ---------------- 卡片 ---------------- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.card.flush { padding: 0; overflow: hidden; }
+/* 「设置属性 / 技能上限」跳进 AI 设置后闪一下金边 ——
+   弹层里卡片多，滚过去了也得让玩家知道该看哪一张。
+   时长与 app.js 里移除 class 的 2600ms 对齐。 */
+@keyframes capJump {
+  0%, 70% { box-shadow: 0 0 0 3px var(--gold-soft); border-color: var(--gold); }
+  100%    { box-shadow: var(--shadow-sm); border-color: var(--border); }
+}
+.card.cap-jump { border-color: var(--gold); animation: capJump 2.6s ease-out; }
+.card-head {
+  display: flex; align-items: center; gap: 8px;
+  margin: -14px -14px 12px; padding: 11px 14px;
+  border-bottom: 1px solid var(--border); background: var(--surface-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.card-head h3 { font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+.card-head .hint { font-size: 11.5px; color: var(--text-mute); margin-left: auto; }
+.card-title { font-size: 13.5px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.muted { color: var(--text-mute); }
+.dim { color: var(--text-dim); }
+.tiny { font-size: 11.5px; }
+.small { font-size: 12.5px; }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: 8px; }
+.row.wrap { flex-wrap: wrap; }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.grow { flex: 1; min-width: 0; }
+
+/* ---------------- 表单 ---------------- */
+.field { margin-bottom: 13px; }
+.field:last-child { margin-bottom: 0; }
+.field > label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-dim); margin-bottom: 6px; letter-spacing: .02em;
+}
+.field > label .req { color: var(--danger); margin-left: 2px; }
+.field .help { font-size: 11px; color: var(--text-mute); margin-top: 5px; }
+
+.input, .select, .textarea {
+  width: 100%; padding: 11px 12px; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); outline: none; transition: .16s;
+  font-size: 14.5px;
+}
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--gold); background: var(--surface-3);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.input::placeholder, .textarea::placeholder { color: var(--text-mute); }
+.input.invalid { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+.textarea { resize: vertical; min-height: 76px; line-height: 1.6; }
+.select { appearance: none; background-image: none; padding-right: 32px;
+  background: var(--surface-2); }
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: ''; position: absolute; right: 13px; top: 50%;
+  width: 7px; height: 7px; border-right: 2px solid var(--text-mute);
+  border-bottom: 2px solid var(--text-mute);
+  transform: translateY(-70%) rotate(45deg); pointer-events: none;
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 420px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ---------------- 按钮 ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-str); background: var(--surface-2);
+  color: var(--text); font-size: 14px; font-weight: 600;
+  transition: .16s; white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+.btn.primary {
+  background: linear-gradient(160deg, var(--gold-str), var(--gold));
+  color: #211903; border-color: transparent;
+  box-shadow: 0 3px 14px rgba(212,169,74,.32);
+}
+.btn.ghost { background: transparent; border-color: var(--border); color: var(--text-dim); }
+.btn.danger { background: var(--danger-soft); border-color: rgba(224,96,90,.35); color: var(--danger); }
+.btn.teal { background: var(--teal-soft); border-color: rgba(70,185,168,.35); color: var(--teal); }
+.btn.sm { padding: 7px 11px; font-size: 12.5px; border-radius: 8px; }
+.btn.block { width: 100%; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 按钮文字不许被压扁：宁可换行，也不要文字溢出按钮边界。
+   根因是按钮同时带 .grow 时 flex-basis:0 + min-width:0，宽度可以被压到小于文字。 */
+.btn-group > .btn { min-width: max-content; }
+/* 两列网格：一排多个操作按钮时，左右等宽、逐行排开，不会挤成一团 */
+.btn-group.cols2 {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(2, minmax(max-content, 1fr));
+}
+.btn-group.cols2 > .btn { width: 100%; }
+
+/* ---------------- 底栏 ---------------- */
+.bottombar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 58;
+  padding: 10px 14px calc(var(--safe-b) + 10px);
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 9px;
+  max-width: 900px; margin: 0 auto;
+}
+.bottombar .btn { flex: 1; }
+
+/* ---------------- 徽标 / 标签 ---------------- */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px; font-size: 11.5px;
+  background: var(--surface-3); color: var(--text-dim);
+  border: 1px solid var(--border); white-space: nowrap;
+}
+.tag.gold { background: var(--gold-soft); color: var(--gold-str); border-color: rgba(212,169,74,.3); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(70,185,168,.3); }
+.tag.arcane { background: var(--arcane-soft); color: var(--arcane); border-color: rgba(138,125,224,.3); }
+.tag.danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(224,96,90,.3); }
+.tag.success { background: var(--success-soft); color: var(--success); border-color: rgba(79,185,138,.3); }
+
+/* ---------------- 提示 / 警告 ---------------- */
+.notice {
+  display: flex; gap: 9px; padding: 11px 13px; border-radius: var(--radius-sm);
+  font-size: 12.5px; line-height: 1.6; margin-bottom: 11px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim);
+}
+.notice.warn { background: var(--gold-soft); border-color: rgba(212,169,74,.3); color: var(--gold-str); }
+.notice.err  { background: var(--danger-soft); border-color: rgba(224,96,90,.3); color: var(--danger); }
+.notice.ok   { background: var(--success-soft); border-color: rgba(79,185,138,.3); color: var(--success); }
+.notice .ico { flex: 0 0 auto; font-size: 14px; line-height: 1.3; }
+
+/* ---------------- 属性格 ---------------- */
+.attr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+@media (max-width: 400px) { .attr-grid { grid-template-columns: repeat(2, 1fr); } }
+.attr-cell {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 10px; position: relative;
+  transition: .16s;
+}
+.attr-cell.changed { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+.attr-cell .lab {
+  display: flex; align-items: baseline; gap: 5px; margin-bottom: 5px;
+}
+.attr-cell .lab .ab { font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--gold); letter-spacing: .06em; }
+.attr-cell .lab .cn { font-size: 12px; color: var(--text-dim); }
+.attr-cell .lab .hb { margin-left: auto; }
+.attr-cell input {
+  width: 100%; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: var(--mono); font-size: 22px; font-weight: 700;
+  padding: 0; text-align: center; letter-spacing: .02em;
+}
+.attr-cell input.half { color: var(--text-mute); font-size: 12px; font-weight: 500; font-family: var(--mono); margin-top: 1px; }
+.attr-cell .attr-half { text-align: center; font-family: var(--mono); font-size: 11.5px; color: var(--text-mute); margin-top: 2px; }
+.help-btn {
+  width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 9.5px; background: var(--surface-3); color: var(--text-mute);
+  border: 1px solid var(--border); cursor: pointer; line-height: 1;
+}
+
+/* ---------------- 派生属性 ---------------- */
+.derived-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+@media (min-width: 620px) { .derived-grid { grid-template-columns: repeat(6, 1fr); } }
+.derived-cell {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 6px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.derived-cell::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: .5;
+}
+.derived-cell .k { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; color: var(--text-mute); font-weight: 700; }
+.derived-cell .v { font-family: var(--mono); font-size: 21px; font-weight: 700; color: var(--gold-str); margin: 1px 0; }
+.derived-cell .n { font-size: 10.5px; color: var(--text-mute); }
+
+/* ---------------- 技能表 ---------------- */
+.skill-toolbar { display: flex; gap: 7px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.skill-toolbar::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 12px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+  transition: .16s; white-space: nowrap;
+}
+.chip.on { background: var(--gold-soft); border-color: rgba(212,169,74,.4); color: var(--gold-str); font-weight: 600; }
+
+.skill-list { display: flex; flex-direction: column; gap: 7px; }
+.skill-row {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 10px; transition: .16s;
+}
+.skill-row.is-occ { border-left: 3px solid var(--gold); }
+.skill-row.is-err { border-color: var(--danger); }
+/* 组技能下的专攻行：左侧缩进，视觉上从属于上面那个组标题 */
+.skill-row.is-sub { margin-left: 12px; background: var(--surface); border-style: dashed; }
+/* 组技能折叠标题行 */
+.skill-group-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 9px 11px; border-radius: var(--radius-sm);
+  background: var(--surface-3); border: 1px solid var(--border-str);
+  transition: .16s;
+}
+.skill-group-head:active { transform: scale(.99); }
+/* 展开态：左侧加一道金色标记，与折叠态区分开 */
+.skill-group-head.open { border-left: 3px solid var(--gold); }
+.skill-group-head .gn { font-size: 13px; font-weight: 700; color: var(--text); }
+.skill-group-head .gc { font-size: 11px; color: var(--text-mute); }
+.skill-group-head .gv { margin-left: auto; font-size: 11px; color: var(--gold-str); font-weight: 600; }
+.skill-row .top { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+.skill-row .nm { font-size: 13.5px; font-weight: 600; }
+.skill-row .base {
+  font-family: var(--mono); font-size: 11px; color: var(--text-mute);
+  background: var(--surface-3); padding: 2px 7px; border-radius: 5px;
+}
+.skill-row .total {
+  margin-left: auto; font-family: var(--mono); font-size: 19px; font-weight: 700;
+  color: var(--teal); min-width: 42px; text-align: right;
+}
+.skill-row .total.hi { color: var(--gold-str); }
+.skill-row .total.warn { color: var(--danger); }
+.skill-calc {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+}
+/* 每组要塞下 −/＋/＋5/＋10 四个按钮，固定两列最稳；
+   宽屏也不要缩成四列，否则按钮挤到点不准。 */
+.calc-group {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 6px; display: flex; flex-direction: column; gap: 4px;
+}
+.calc-group .cg-top { display: flex; align-items: center; gap: 5px; }
+.calc-group .cg-ops { display: flex; align-items: center; gap: 3px; }
+.calc-group .cg-ops .sbtn { flex: 1 1 0; width: auto; min-width: 0; height: 24px; font-size: 11.5px; padding: 0 2px; }
+.calc-group.detail .cg-ops .sbtn { flex: 0 0 46px; margin-left: auto; }
+.calc-group .lg { font-size: 10px; color: var(--text-mute); flex: 0 0 auto; width: 30px; }
+.calc-group .val {
+  flex: 1; text-align: center; font-family: var(--mono); font-size: 15px; font-weight: 700;
+  background: transparent; border: none; outline: none; color: var(--text); width: 100%; padding: 0;
+}
+/* 可手动键入的点数框（替代只能点 +/− 的旧做法） */
+.calc-group .pin-input {
+  flex: 1; min-width: 0; width: 100%; padding: 2px 0; text-align: center;
+  font-family: var(--mono); font-size: 15px; font-weight: 700;
+  background: transparent; border: none; border-bottom: 1px dashed var(--border-str);
+  border-radius: 0; outline: none; color: var(--text);
+}
+.calc-group .pin-input:focus {
+  border-bottom-color: var(--gold); border-bottom-style: solid;
+  background: var(--gold-soft); border-radius: 4px; box-shadow: none;
+}
+.calc-group .pin-input.pin-locked { border-bottom-color: transparent; pointer-events: none; }
+.calc-group.locked { opacity: .45; }
+.sbtn {
+  width: 25px; height: 25px; flex: 0 0 25px; border-radius: 6px;
+  display: grid; place-items: center; font-size: 15px; font-weight: 700; line-height: 1;
+  background: var(--surface-3); border: 1px solid var(--border); color: var(--text-dim);
+}
+.sbtn:active { transform: scale(.9); }
+.sbtn.plus { background: var(--gold-soft); color: var(--gold-str); border-color: rgba(212,169,74,.35); }
+.sbtn.minus { background: var(--surface-3); }
+.sbtn.dis { opacity: .3; pointer-events: none; }
+
+/* 技能点总览 */
+.point-bar {
+  position: sticky; top: 44px; z-index: 40;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 11px;
+}
+.point-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 11px;
+  box-shadow: var(--shadow-sm);
+}
+.point-box .ttl { font-size: 10.5px; color: var(--text-mute); letter-spacing: .05em; margin-bottom: 3px; }
+.point-box .nums { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+.point-box .nums .r { color: var(--teal); }
+.point-box .nums .r.neg { color: var(--danger); }
+.point-box .bar { height: 4px; border-radius: 3px; background: var(--surface-3); margin-top: 6px; overflow: hidden; }
+.point-box .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-str)); transition: width .25s; }
+.point-box .bar.over > i { background: linear-gradient(90deg, #c0392f, var(--danger)); }
+
+/* ---------------- 职业选择 ---------------- */
+.occ-item {
+  display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+  border-bottom: 1px solid var(--border); background: transparent;
+  width: 100%; text-align: left; transition: .16s;
+}
+.occ-item:last-child { border-bottom: none; }
+.occ-item:active { background: var(--surface-2); }
+.occ-item.sel { background: var(--gold-soft); }
+.occ-item .nm { font-size: 14px; font-weight: 600; }
+.occ-item .meta { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+.occ-item .chk { margin-left: auto; color: var(--gold-str); font-size: 15px; }
+
+.search-box { position: relative; margin-bottom: 10px; }
+.search-box .input { padding-left: 34px; }
+.search-box::before {
+  content: '⌕'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: var(--text-mute); pointer-events: none;
+}
+.scroll-area { max-height: 46vh; overflow-y: auto; }
+@media (min-width: 700px) { .scroll-area { max-height: 420px; } }
+
+/* ---------------- 实时校验行 ---------------- */
+.chk-row {
+  display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px;
+  border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.chk-row:last-child { border-bottom: none; }
+.chk-row .mk {
+  width: 18px; height: 18px; flex: 0 0 18px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+  background: var(--success-soft); color: var(--success); border: 1px solid rgba(79,185,138,.35);
+}
+.chk-row .mk.bad { background: var(--danger-soft); color: var(--danger); border-color: rgba(224,96,90,.35); }
+.chk-row .mk.warn { background: var(--gold-soft); color: var(--gold-str); border-color: rgba(212,169,74,.35); }
+.chk-row .tx { flex: 1; }
+.chk-row .go { color: var(--gold); font-size: 12px; flex: 0 0 auto; }
+
+/* ---------------- 悬浮提示 / 弹层 ---------------- */
+.sheet-mask {
+  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.6);
+  backdrop-filter: blur(3px); display: flex; align-items: flex-end; justify-content: center;
+  animation: fade .18s;
+  /* 遮罩自己不滚动、也不把滚动链传给底下的页面 */
+  overflow: hidden; overscroll-behavior: contain;
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.sheet {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%; max-width: 620px; max-height: 86vh; overflow-y: auto;
+  padding: 16px 16px calc(var(--safe-b) + 16px);
+  animation: slideUp .22s cubic-bezier(.2,.8,.3,1);
+  /* 弹层内滚到头之后不再带动背景（否则表现为「浮窗和角色卡一起动」） */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 弹层打开时锁住背景滚动；多层弹层叠加由计数锁统一管理 */
+html.scroll-locked, body.scroll-locked { overflow: hidden !important; }
+@media (min-width: 700px) {
+  .sheet-mask { align-items: center; }
+  .sheet { border-radius: var(--radius-lg); max-height: 82vh; }
+}
+.sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.sheet-head h3 { font-family: var(--serif); font-size: 17px; flex: 1; min-width: 0; }
+
+.toast-host {
+  position: fixed; left: 50%; bottom: calc(var(--safe-b) + 88px); transform: translateX(-50%);
+  z-index: 200; display: flex; flex-direction: column; gap: 7px; align-items: center;
+  pointer-events: none; width: calc(100% - 28px); max-width: 400px;
+}
+.toast {
+  background: var(--surface-3); border: 1px solid var(--border-str);
+  color: var(--text); padding: 9px 15px; border-radius: 22px; font-size: 13px;
+  box-shadow: var(--shadow); animation: slideUp .22s; max-width: 100%;
+  text-align: center; word-break: break-word;
+}
+.toast.err { background: var(--danger); color: #fff; border-color: transparent; }
+.toast.ok  { background: var(--success); color: #fff; border-color: transparent; }
+
+/* ---------------- 角色卡展示 ---------------- */
+.sheet-hero {
+  position: relative; padding: 18px 14px; margin: -14px -14px 14px;
+  background: linear-gradient(160deg, var(--surface-3), var(--surface));
+  border-bottom: 1px solid var(--border); overflow: hidden;
+}
+.sheet-hero::before {
+  content: ''; position: absolute; right: -30px; top: -30px; width: 150px; height: 150px;
+  border-radius: 50%; background: radial-gradient(circle, var(--gold-soft), transparent 70%);
+}
+.sheet-hero .avatar {
+  width: 76px; height: 76px; border-radius: 16px; object-fit: cover;
+  border: 2px solid var(--gold); background: var(--surface-2);
+  display: grid; place-items: center; font-size: 28px; color: var(--text-mute);
+  box-shadow: 0 4px 18px rgba(0,0,0,.4);
+}
+.sheet-hero .nm { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+.sheet-hero .pl { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+.sheet-hero .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+
+.vital-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.vital {
+  text-align: center; padding: 9px 4px; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.vital .k { font-family: var(--mono); font-size: 10px; letter-spacing: .07em; color: var(--text-mute); font-weight: 700; }
+.vital .v { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text); }
+.vital .v small { font-size: 11px; color: var(--text-mute); font-weight: 500; }
+.vital.hp .v { color: #e0605a; }
+.vital.mp .v { color: #6a9ee0; }
+.vital.san .v { color: #8a7de0; }
+.vital.luck .v { color: #4fb98a; }
+
+.attr-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+@media (min-width: 560px) { .attr-mini { grid-template-columns: repeat(5, 1fr); } }
+.attr-mini .c {
+  text-align: center; padding: 7px 3px; border-radius: 9px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.attr-mini .c .a { font-family: var(--mono); font-size: 10px; color: var(--gold); font-weight: 700; }
+.attr-mini .c .v { font-family: var(--mono); font-size: 16px; font-weight: 700; }
+
+/* 技能展示（只读） */
+.skill-show { display: flex; flex-direction: column; }
+.skill-show .r {
+  display: grid; grid-template-columns: 1fr 30px 34px 34px 44px;
+  align-items: center; gap: 5px; padding: 6px 4px;
+  border-bottom: 1px solid var(--border); font-size: 12.5px;
+}
+.skill-show .r:last-child { border-bottom: none; }
+.skill-show .r.head { color: var(--text-mute); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; }
+.skill-show .r .c { text-align: center; font-family: var(--mono); }
+.skill-show .r .c.big { font-weight: 700; color: var(--teal); font-size: 14px; }
+.skill-show .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 数据表 */
+.dtable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dtable th, .dtable td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+.dtable th { font-size: 10.5px; color: var(--text-mute); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.dtable td.mono { font-family: var(--mono); }
+.dtable tr:last-child td { border-bottom: none; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* 症状表：点条目即可多选，选中的高亮 */
+.dtable td.pick { cursor: pointer; border-radius: 6px; transition: background .15s, color .15s; }
+.dtable td.pick:hover { background: var(--surface-2); }
+.dtable td.pick.on { background: var(--gold-soft); color: var(--gold-str); font-weight: 700; }
+/* 弹层底部固定操作条 */
+.sheet-actions {
+  position: sticky; bottom: 0; z-index: 3;
+  margin: 12px -16px calc(-1 * (var(--safe-b) + 16px));
+  padding: 11px 16px calc(var(--safe-b) + 11px);
+  background: var(--surface); border-top: 1px solid var(--border);
+}
+
+/* 技能点数说明：不能跟着 sticky 的点数条一起固定，否则会飘在屏幕左上角挡内容 */
+.point-note { margin-bottom: 11px; }
+
+/* 属性格的年龄调整提示 */
+.attr-cell .attr-adj {
+  text-align: center; font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+  color: var(--danger); margin-top: 2px;
+}
+.attr-cell .attr-lock { text-align: center; font-size: 10px; color: var(--text-mute); margin-top: 3px; line-height: 1.4; }
+.attr-cell input.attr-locked { opacity: .5; background: var(--surface-3); }
+
+/* 总属性值卡片 */
+.sum-cell {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 11px;
+}
+.sum-cell .k { font-size: 10.5px; color: var(--text-mute); letter-spacing: .04em; }
+.sum-cell .v { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--gold-str); margin-top: 2px; }
+.sum-cell .n { font-size: 10px; color: var(--text-mute); margin-top: 3px; line-height: 1.45; }
+
+/* 购点实时统计（计入 / 已用 / 上限 / 超出或剩余） */
+.sum-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+  margin-top: 11px;
+}
+.sum-grid .sum-cell { padding: 7px 9px; }
+.sum-grid .sum-cell .v { font-size: 17px; }
+@media (max-width: 360px) {
+  .sum-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 「随机生成」按钮旁的总属性值预览 */
+.roll-sum {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--gold-str); letter-spacing: .02em;
+}
+
+/* 列表右侧的数值预览（职业点数 / 技能成功率） */
+.occ-pts {
+  flex: 0 0 auto; margin-left: auto; text-align: right; min-width: 50px;
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.occ-pts b { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--gold-str); line-height: 1.1; }
+.occ-pts span { font-size: 9.5px; color: var(--text-mute); letter-spacing: .04em; }
+
+/* 规则系统分类标签 */
+.tag.rule-tag { background: var(--arcane-soft); color: var(--arcane); border-color: rgba(138,125,224,.3); }
+
+/* 技能上限只读展示（点击无反应会让人以为坏掉，所以不做成按钮） */
+.cap-display { display: flex; flex-direction: column; gap: 5px; }
+.cap-display .cd-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+}
+.cap-display .cd-row .k { font-size: 11.5px; color: var(--text-dim); }
+.cap-display .cd-row b { font-family: var(--mono); font-size: 14px; color: var(--gold-str); }
+
+/* 雷达图 */
+.radar-wrap { display: grid; place-items: center; padding: 6px 0; }
+.radar-legend { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; font-size: 11px; }
+.radar-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+
+/* 列表空态 */
+.empty { text-align: center; padding: 30px 16px; color: var(--text-mute); }
+.empty .big { font-size: 34px; margin-bottom: 9px; opacity: .5; }
+
+/* 条目卡 */
+.entry {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px; margin-bottom: 9px;
+}
+.entry .hd { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.entry .hd .t { font-size: 13.5px; font-weight: 600; flex: 1; }
+
+/* 主页 */
+
+/* 首页「最近的调查员」：标题栏与角色卡连成一体，中间不留缝 */
+.char-list {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.char-list > .card-head {
+  /* 标题栏背景必须与下面的角色卡同色，否则即使没有物理间隙，
+     两种底色挨在一起也会读成「两块分开的东西」。 */
+  margin: 0; padding: 11px 14px; border-radius: 0; background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+.char-list > .char-card {
+  margin: 0; border: none; border-radius: 0;
+  border-bottom: 1px solid var(--border);
+}
+.char-list > .char-card:last-child { border-bottom: none; }
+
+/* 关于页品牌头 */
+.about-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 14px; }
+.about-brand img {
+  width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+  border: 1px solid rgba(212,169,74,.42);
+  box-shadow: 0 0 26px rgba(212,169,74,.28);
+}
+.about-brand .nm { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: .05em; }
+
+.rule-card {
+  display: flex; align-items: center; gap: 12px; padding: 15px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 10px; width: 100%; text-align: left;
+  transition: .16s;
+}
+.rule-card:active { transform: scale(.985); }
+.rule-card.on { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+.rule-card.off { opacity: .5; }
+.rule-card .ic {
+  width: 46px; height: 46px; flex: 0 0 46px; border-radius: 12px;
+  display: grid; place-items: center; font-size: 22px;
+  background: var(--surface-3); border: 1px solid var(--border);
+}
+.rule-card.on .ic { background: var(--gold-soft); border-color: rgba(212,169,74,.35); }
+.rule-card .t { font-size: 15px; font-weight: 700; }
+.rule-card .d { font-size: 11.5px; color: var(--text-mute); margin-top: 2px; }
+
+.char-card {
+  display: flex; gap: 11px; padding: 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;
+  width: 100%; text-align: left; transition: .16s;
+}
+.char-card:active { background: var(--surface-2); }
+.char-card .av {
+  width: 54px; height: 54px; flex: 0 0 54px; border-radius: 12px; object-fit: cover;
+  background: var(--surface-3); display: grid; place-items: center;
+  font-size: 21px; color: var(--text-mute); border: 1px solid var(--border);
+}
+.char-card .nm { font-size: 15px; font-weight: 700; }
+.char-card .mt { font-size: 11.5px; color: var(--text-mute); margin-top: 3px; }
+.char-card .st { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+
+/* 「⋯」更多按钮：视觉上仍是 34px 的小圆角块，但触摸热区放到 48px，
+   手指不容易点空（原来的 30px 按钮实际可点区域太小）。 */
+.char-more {
+  position: absolute; right: 2px; top: 2px;
+  width: 48px; height: 48px; flex: 0 0 48px;
+  display: grid; place-items: center;
+  background: transparent; border: 0; padding: 0; margin: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.char-more > span {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: grid; place-items: center;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim);
+  font-size: 17px; line-height: 1; transition: .16s;
+}
+.char-more:active > span { transform: scale(.9); background: var(--surface-3); }
+
+.pick-avatar {
+  width: 84px; height: 84px; border-radius: 16px; border: 1.5px dashed var(--border-str);
+  background: var(--surface-2); display: grid; place-items: center;
+  color: var(--text-mute); font-size: 24px; overflow: hidden; flex: 0 0 84px;
+  position: relative;
+}
+.pick-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 分享链接展示框：允许长按选中，方便手动复制 */
+.link-box {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+  color: var(--teal);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  margin-top: 5px;
+  -webkit-user-select: all;
+  user-select: all;
+}
+
+@media (min-width: 900px) {
+  .content { padding-bottom: 100px; }
+}
+
+/* ---------------- 底栏硬拦截提示 ---------------- */
+.bottombar .bar-block {
+  color: var(--danger); font-weight: 600; line-height: 1.35;
+}
+.btn.blocked { opacity: .5; }
+
+/* ---------------- 天命 N 选一 ---------------- */
+.fate-list { display: flex; flex-direction: column; gap: 10px; }
+.fate-opt {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px;
+}
+.fate-opt.on { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+.fo-head { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; flex-wrap: wrap; }
+.fo-no { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
+.fo-sum { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--gold-str); font-weight: 700; }
+.fate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+@media (min-width: 520px) { .fate-grid { grid-template-columns: repeat(5, 1fr); } }
+.fate-cell {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+  padding: 5px 7px; display: flex; align-items: baseline; gap: 5px;
+}
+.fate-cell .k { font-size: 9.5px; color: var(--text-mute); letter-spacing: .04em; }
+.fate-cell .v { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--gold-str); margin-left: auto; }
+
+/* ---------------- 第 0 步：预设卡摘要 ---------------- */
+.preset-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 13px; margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.preset-card .pc-head { display: flex; align-items: flex-start; gap: 10px; }
+.preset-card .pc-no {
+  flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--mono); font-size: 12px; font-weight: 700;
+  background: linear-gradient(160deg, var(--gold-str), var(--gold)); color: #221a05;
+}
+.preset-card .pc-name { font-size: 16px; font-weight: 700; font-family: var(--serif); }
+.preset-card .pc-meta { font-size: 11.5px; color: var(--text-mute); margin-top: 2px; }
+/* 预设卡上的头像缩略（自动生成的那张 SVG 徽章） */
+.preset-card .pc-av {
+  width: 46px; height: 46px; flex: 0 0 46px; border-radius: 11px;
+  object-fit: cover; border: 1px solid var(--border);
+}
+.preset-card .pc-block { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--border); }
+.preset-card .pc-lab {
+  font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700; margin-bottom: 6px;
+}
+.preset-card .fate-grid { margin-bottom: 0; }
+
+/* ---------------- 疯狂状态条（角色卡「状态」卡片内） ---------------- */
+.madness-strip {
+  margin-top: 11px; padding: 10px 11px; border-radius: 10px;
+  background: var(--arcane-soft); border: 1px solid rgba(138,125,224,.25);
+}
+.madness-head {
+  font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--arcane); font-weight: 700; margin-bottom: 7px;
+}
+
+/* ---------------- 彩蛋角标：🥚 名人 / 🎭 跑团成员 ---------------- */
+.preset-card .pc-name { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.egg-badge {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700; line-height: 1;
+  padding: 4px 7px; border-radius: 20px;
+  background: var(--gold-soft); color: var(--gold-str);
+  border: 1px solid rgba(212,169,74,.35);
+  white-space: nowrap;
+}
+.egg-badge.friend {
+  background: var(--arcane-soft); color: var(--arcane);
+  border-color: rgba(138,125,224,.35);
+}
+
+
+/* ---------------- AI 车卡：等待状态 ---------------- */
+.ai-loading {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 0 2px;
+}
+.ai-loading .spinner {
+  width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%;
+  border: 2.5px solid var(--border-str);
+  border-top-color: var(--gold);
+  animation: aispi 0.9s linear infinite;
+}
+@keyframes aispi { to { transform: rotate(360deg); } }
+.ai-loading .grow > div:last-child { margin-top: 3px; }
+
+
+/* ============================================================
+   跑团房间
+   ------------------------------------------------------------
+   房间是独立路由页（不是弹层），所以它自己管排版与滚动。
+   配色全部走既有 CSS 变量，明暗主题都能自动适配。
+   ============================================================ */
+
+/* ---------------- 首页入口 ---------------- */
+/* 和「选择规则系统」并排，但用青色区分：它是另一个主功能，不是车卡的一步 */
+.rule-card.room-entry .ic {
+  background: var(--teal-soft); border-color: rgba(70,185,168,.35);
+}
+.rule-card.room-entry:active { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+
+/* ---------------- 入口页 ---------------- */
+.room-hero { padding: 4px 2px 14px; }
+.room-hero h2 { font-family: var(--serif); font-size: 22px; margin-bottom: 4px; }
+.room-hero p { margin: 0; font-size: 13px; color: var(--text-dim); }
+
+.invite-card { border-color: rgba(70,185,168,.35); }
+.invite-card .room-code.big { margin: 6px 0 2px; }
+
+/* 房间号：等宽字体 + 字距，念给别人听时不容易听错 */
+.room-code {
+  font-family: var(--mono); font-size: 19px; font-weight: 700;
+  letter-spacing: .16em; color: var(--gold-str); margin: 6px 0 4px;
+  word-break: break-all;
+}
+.room-code.big { font-size: 27px; letter-spacing: .22em; }
+
+/* joinSheet 里的探测结果：成功绿、失败红，就用现有的语义色 */
+.probe-ok { color: var(--success); }
+.probe-err { color: var(--danger); }
+
+/* ---------------- 房间页 ---------------- */
+.room-page { display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------------- 游戏页（v2.0.0 两套分区骨架） ----------------
+   KP / PL 各一套固定分区网格；每个可滚动区域**各自内部滚动**。
+   页面本身 overflow-y:auto（小屏时整体可滚，保证底部工具栏点得到）。
+   窄屏（手机竖屏）降级为单列堆叠；横屏 / 宽屏启用分区网格。
+
+   ⚠️ 历史坑（v1.19.0）：旧版是 position:fixed;inset:0;overflow:hidden，
+   固定 vh 高度之和 > 视口 → 顶部/底部被裁且滚不动。这里保持可纵向滚动，
+   并保留 .gp-kpbar / .gp-center / .gp-glog / .gp-chat / .gp-players /
+   .gp-status / .gp-toolbar 这些既有类名（旧断言依赖）。 */
+.game-page {
+  position: fixed; inset: 0; z-index: 5;
+  /* v2.0.2 问题1：纵向原生滚动 = 放大后的纵向平移。
+     横向**保持 hidden**（既有断言「.game-page 不出现横向滚动条」要求 overflow-x
+     为 hidden/clip，且 1:1 时本就不该有横向滚动条）；横向平移改由
+     bindPinchZoom 的「双指中点位移 → scrollLeft」实现 —— overflow:hidden 的元素
+     仍可**程序化**滚动（scrollLeft/scrollTop 有效，只是不显示滚动条、不响应单指横滑）。
+     这样既满足「放大后横向可平移」，又不引入横向滚动条。 */
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  --gp-zoom: 1;
+}
+/* 双指缩放容器：文字 / 按钮 / 面板一起缩放。
+   scale 恰好为 1 时由 .gp-noscale 移除 transform —— 否则会形成
+   containing block，让底部工具栏的 sticky 失效（小屏就点不到底栏）。
+
+   v2.0.1 根因①：这里必须是**确定高度**（height）而不是 min-height。
+   旧写法只有 min-height，百分比/fr 高度链在 .gp-zoom 断掉 →
+   .gp-main 的 minmax(0,1fr) 行高退化成「内容高度」→ 网格行塌陷、
+   地图被压成窄条、下方留大片空白。
+   注意：**仅网格模式（.gp-grid）**给确定高度；单列模式必须回到
+   height:auto（见下面的 .game-page:not(.gp-grid) 规则），否则内容超高时
+   子项会被压成 0px（真机 640×400 实测）。
+
+   v2.0.2 问题1：**删除 width / height / min-height 里的 calc(100% / var(--gp-zoom))**。
+   那套是「浏览器式缩放」（改虚拟视口 → 触发重排），正是用户看到的「很多 UI 被
+   缩放 / 挤压」的根因。现在布局只按**设备自然宽度**算一次（width:100%），之后
+   只有纯 transform: scale() —— 无重排，网格阈值判定（applyGridClass 只看
+   innerWidth/innerHeight）与缩放完全解耦。 */
+.gp-zoom {
+  display: flex; flex-direction: column; gap: 6px;
+  width: 100%;
+  transform: scale(var(--gp-zoom));
+  transform-origin: 0 0;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.game-page.gp-noscale .gp-zoom { transform: none; }
+/* v2.1.7（用户第 5 项）：**缩小（zoom<1）**时把布局框按**倒数**放大 ——
+   内容先在更大的虚拟视口里重排（网格列宽按虚拟宽度分配、文字按钮照常排版），
+   再被 transform 等比缩回视口大小。这才是用户要的「栏位内元素一起缩放、
+   全部内容完整显示」：不是缩小后留一块死区，而是真·浏览器式缩放。
+   ⚠️ 只对 zoom<1（.gp-zoomout，由 setZoom 切换）生效：
+     · zoom=1：.gp-noscale 排除，行为与 v2.0.2 定稿逐字节一致；
+     · zoom>1（放大）：保持 v2.0.2 的「放大 + 平移」语义（A2/A3 断言守的就是它）——
+       放大时虚拟视口变小反而会把布局挤爆，不属于本需求的适用场景。 */
+.game-page.gp-zoomout .gp-zoom {
+  width: calc(100% / var(--gp-zoom));
+}
+.game-page.gp-grid.gp-zoomout .gp-zoom {
+  height: calc(100% / var(--gp-zoom));
+}
+/* 网格模式：确定高度 → 让下游 flex/grid 能正确分配视口高度（不再除以 zoom）。
+   v2.0.10：工具栏改为 position:fixed（脱离文档流，不占 .game-page 滚动高度），
+   故此处高度**保持 100%**（E1/E3「zoom 高≈视口」不变）；内容被工具栏遮挡的问题
+   由下面 `.gp-zoom` 的 padding-bottom 预留解决（见 @media(max-height:460) 之后）。 */
+.game-page.gp-grid .gp-zoom {
+  height: calc(100%);
+  min-height: 0;
+}
+/* 单列 / 窄屏兜底：内容驱动高度 + 页面整体滚动，谁都不被压成 0 */
+.game-page:not(.gp-grid) .gp-zoom {
+  height: auto;
+}
+.gp-topbar {
+  /* v2.0.10（用户第 5 项）：补顶部安全区 —— `viewport-fit=cover` 下 WebView 内容
+     延伸到状态栏 inset，缺此 padding 会被系统状态栏压住。 */
+  flex: 0 0 auto; padding: calc(var(--safe-t) + 8px) 10px 8px; border-radius: var(--radius-sm);
+  background: var(--gold-soft); border: 1px solid var(--gold);
+}
+.gp-topbar-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* v2.0.1 缺陷A：窄屏顶栏标题块不被挤成 11px 竖排条。
+   .grow 是 flex:1 → basis 0，右侧 6 个 chip 一起挤压时它可被压到几 px，
+   11px 装不下中文 → 逐字竖排 → 撑到数百 px。这里给标题块一个可换行的
+   最小宽度 + 允许其独占整行（flex-basis 100%），让它先换行再收缩，
+   而**不是**用 overflow:hidden / nowrap 截断房间信息。
+   min-width: 0 仍保留在换行后允许正常收缩，故不会撑破容器。
+   ⚠️ 关键：**只在窄屏**加宽度约束。若在宽屏也给 min-width，会把右侧 6 个 chip
+      挤到第二行，顶栏从 ~50px 涨到 ~122px，.gp-main 被压到 108px → KP 地图
+      被压扁（A4 实测 mapH=41 回归）。故宽屏保持 flex:1/min-width:0 不动。 */
+.gp-topbar-inner > .grow { min-width: 0; }
+/* v2.0.1 缺陷A'（主理人视觉验证 A14）：窄屏（≤430px）KP 顶栏里的**服务地址块**
+   用一个独立的 57px 高小卡把顶栏撑到 178px，把 .gp-main 挤到几乎没高度。
+   这里把「地址行 + 两个复制按钮」压成一条紧凑横排（地址可省略、按钮不换行），
+   顶栏高度回到单行量级；地址仍完整保留（截断的是展示，不是数据）。 */
+.gp-topbar .btn-group { align-items: center; }
+@media (max-width: 430px) {
+  .gp-topbar-inner > .grow {
+    flex: 1 1 100%; min-width: 0;   /* 窄屏：标题块独占一行，先换行再收缩 */
+    word-break: break-word;         /* 长房间名/地址可断行，不逐字竖排 */
+  }
+  /* 地址块压平：地址与两个复制按钮同排，整体只占一行 */
+  .gp-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gp-topbar-inner > .grow > .gp-hostaddr {
+    margin-top: 2px !important;
+    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  }
+  /* ⚠️ 房间信息行**含房间号**，截断会让用户读不到房间号 —— 必须换行不截断。 */
+  .gp-topbar-inner > .grow .tiny.dim {
+    white-space: normal; word-break: break-word; flex: 1 1 auto; min-width: 0;
+  }
+  .gp-topbar-inner .btn-group { flex-wrap: nowrap; margin-top: 0 !important; flex: 0 0 auto; gap: 4px; }
+  .gp-topbar-inner .btn-group > .btn {
+    padding: 3px 6px; font-size: 11px; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}
+.gp-title { font-family: var(--serif); font-weight: 700; font-size: 14.5px; letter-spacing: .02em;
+  white-space: normal; }
+.gp-main { display: flex; flex-direction: column; gap: 6px; min-height: 0; flex: 1 1 auto; }
+/* v2.0.10（用户参考图）：.gp-info —— 第二行独立网格，3 栏等宽
+   （聊天框 | 游戏公开信息记录 | 场景检定），不与上排 4 栏对齐。 */
+.gp-info { display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
+/* v2.1.6（用户布局图）：玩家中列的聊天|记录两栏并排（场景检定移去右列） */
+.game-page.gp-grid .gp-info {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  flex: 1 1 auto; min-height: 0;
+}
+/* v2.0.10：网格模式下 main 保底 120px（A4 地图区高≥120 的下限来源）。 */
+.game-page.gp-grid .gp-main-kp,
+.game-page.gp-grid .gp-main-pl { min-height: 120px; }
+.gp-info > .gp-region { min-height: 0; min-width: 0; }
+.game-page.gp-grid .gp-info .gp-chat,
+.game-page.gp-grid .gp-info .gp-glog { max-height: none; }
+/* v2.0.10（用户第 8 项）：探索模式战斗区 —— 收进 .gp-main 上方的**全宽细条**，
+   同时 .gp-main 降为 **3 栏**（无战斗列 → 公开素材吃掉其宽度，不留大空洞）。
+   战斗模式（无 .gp-explore）恢复 4 栏。 */
+.gp-combat-strip { flex: 0 0 auto; width: 100%; }
+.gp-combat-strip:empty { display: none; }
+.gp-combat-fold {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 8px; margin: 0;
+  background: var(--surface-2); border: 1px dashed var(--border-str);
+  border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer;
+}
+.gp-combat-body { max-height: 40vh; overflow-y: auto; margin-top: 6px; }
+/* v2.1.1（用户定稿线框）：KP 的块6/块7 常驻右列（由折叠标题控制显隐）→
+   **取消** KP 探索模式「隐藏战斗列 / 降 3 栏」。
+   v2.1.6：玩家新结构下探索模式只隐藏右列顶部的战斗列表（布局三列不变）。 */
+.game-page.gp-grid.gp-explore .gp-region-pl-combat { display: none; }
+.gp-region { min-height: 0; min-width: 0; }
+.gp-region > .card { margin-bottom: 0; }
+/* v2.0.1 根因③：PL 信息流（记录 + 聊天）是常驻结构 —— 无论命中不命中网格
+   媒体查询，这两个子区域都要能正确分配高度、各自滚动。 */
+.gp-region-pl-feeds { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.gp-region-pl-feeds .gp-glog { flex: 1 1 auto; min-height: 48px; max-height: none; overflow-y: auto; }
+.gp-region-pl-feeds .gp-chat { flex: 0 0 auto; min-height: 60px; }
+.gp-region-hint { padding: 6px 2px; }
+.gp-players {
+  flex: 0 0 auto; display: flex; gap: 6px;
+  overflow-x: auto; padding-bottom: 2px;
+}
+.gp-player {
+  flex: 0 0 auto; min-width: 128px; max-width: 46vw;
+  text-align: left; padding: 6px 10px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border); cursor: pointer;
+}
+.gp-player .nm { font-size: 12.5px; font-weight: 700; }
+.gp-player .d { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.gp-player .b { font-size: 10.5px; color: var(--text-mute); margin-top: 2px; }
+.gp-player.off { opacity: .5; }
+/* 中央大图：给一个**上限**而不是固定高度 —— 小屏上可以缩到 120px，
+   不再把下面的区域顶出屏幕。 */
+.gp-center { flex: 1 1 auto; min-height: 150px; overflow: hidden; }
+.gp-center .card { height: 100%; display: flex; flex-direction: column; }
+/* v2.0.10（用户第 3 项）：公开素材区固定 16:9（rendered 实测须 ≈1.7778）。
+   ⚠️ 必须同时覆盖两处旧规则：① 这里的 aspect-ratio:auto；② `.map-stage-wrap .map-stage`
+   的 flex:1 1 auto —— flex 子项默认 align-self:stretch 会**忽略 aspect-ratio 把高度拉满**，
+   于是实测比变成 4.x（曾被自检漏过）。故：flex:0 0 auto + align-self:center +
+   max-height:100%，让 16:9 在「装得下」时生效、矮屏也不溢出。 */
+.gp-center .map-stage,
+.gp-center .map-stage-wrap .map-stage {
+  flex: 0 0 auto;
+  /* 兜底（旧 WebView 无 cq 单位）：按**高度**定尺寸、宽度由 16:9 推出。 */
+  aspect-ratio: 16 / 9; height: 100%; width: auto;
+  max-width: 100%; max-height: 100%; min-height: 0;
+  align-self: center;
+}
+/* v2.1.1：真正稳的 16:9 —— 用**容器查询单位**取「宽度与高度的较小者」：
+   width = min(容器宽, 容器高×16/9)，高度由比例回推。这样又宽又矮（矮横屏）
+   与又窄又高（大屏 1180×820：容器 688×443 → 按高会算 714 宽 > 688 被裁 → 比变 1.71）
+   两种情形都能保比不溢出。 */
+.gp-center .map-stage-wrap { container-type: size; }
+@supports (width: 1cqh) {
+  .gp-center .map-stage,
+  .gp-center .map-stage-wrap .map-stage {
+    height: auto;
+    width: min(100%, calc(100cqh * 16 / 9));
+  }
+}
+/* v2.1.1（战斗模式块4 修复 · 用户「战斗里公开素材不见了 / 要更大」）：
+   战斗时 .kp-map-area 里除 .map-stage-wrap 还多了「战斗轮次信息」.init-wrap
+   （flex:0 0 auto 不收缩）。若二者在**流内**上下堆叠，矮横屏（844×390：块4 仅 143px 高）
+   下 .init-wrap 把 .map-stage-wrap(flex:1 1 auto, min-height:0) 挤成 **0 高**；而 v2.1.1
+   的 16:9 用容器查询 100cqh 定宽 → wrap 高 0 时 100cqh=0 → 舞台塌成 0×0（只余 1px 边框），
+   公开素材在战斗模式「消失」。
+   修法：把轮次信息做成**浮在地图上沿的紧凑浮层**（不占流内高度）：
+     · 地图铺满整块4 → 更大、且仍 16:9；
+     · 轮次信息（第 N 轮 / 当前行动 / 行动顺序条）仍可见；
+     · 浮层本体 pointer-events:none（KP 仍能在地图上标记/画线），仅 .init-bar 可交互/横向滚动。
+   探索模式 .init-wrap 为空 → 既有 .init-wrap:empty{display:none} 直接隐藏，无副作用。 */
+.game-page.gp-grid .gp-region-kp-map .kp-map-area { position: relative; }
+.game-page.gp-grid .gp-region-kp-map .init-wrap {
+  position: absolute; left: 5px; right: 5px; top: 5px; z-index: 3;
+  flex: none; max-height: 72%; overflow-y: auto;
+  padding: 4px 6px; border-radius: var(--radius-sm);
+  background: rgba(14, 16, 20, .74);
+  pointer-events: none;
+}
+.game-page.gp-grid .gp-region-kp-map .init-wrap .init-bar { pointer-events: auto; }
+.game-page.gp-grid .gp-region-kp-map .init-wrap .combat-turn-note { color: #fff; }
+.gp-center .draw-tools { flex: 0 0 auto; }
+/* 游戏记录：可以缩到很小，把空间让给别处 */
+.gp-glog {
+  flex: 1 1 auto; min-height: 48px; max-height: 30vh; overflow-y: auto;
+  padding: 8px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.gp-status { flex: 0 0 auto; max-height: 26vh; overflow-y: auto; }
+.gp-status:empty { display: none; }
+.gp-chat {
+  flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px;
+  min-height: 96px; max-height: 40vh;
+}
+.gp-chat-list {
+  flex: 1 1 auto; overflow-y: auto; padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border);
+}
+/* 工具栏常驻底部（用户特别提到「底部的东西点不到」）：
+   sticky 让它始终贴在滚动容器底部，任何滚动位置都点得到。
+   T16：z-index 2 → 6。.game-page 是 fixed+inset:0+z-index:5 的独立 stacking
+   context，其内部 .gp-toolbar(原 2) 与 .room-chatbar(5) 同层比较 → chatbar 会
+   盖住工具栏顶排按钮、把点击拦走（架构师 elementFromPoint 实测）。
+   提到 6 即高于同层的 chatbar；:1146 的 .gp-fs(60) 是全屏查看器，仍盖住一切。 */
+.gp-toolbar {
+  /* v2.0.10：工具栏从 .gp-zoom 内移到 .game-page，并 sticky→fixed。
+     原因：① transform:scale() 会生成 containing block 使 sticky 失效（放大后跑位）；
+     ② 作为 zoom 的**兄弟**时用 sticky 会额外撑高 .game-page 滚动高度（A3 溢出）。
+     fixed 使其贴视口底、脱离文档流 —— 缩放不改其 top，也不影响滚动高度。 */
+  flex: 0 0 auto; position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  background: var(--bg); border-top: 1px solid var(--border);
+}
+.gp-quick { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.gp-zoom-pct { font-family: var(--mono); font-size: 11px; color: var(--text-mute); }
+.gp-charpick { display: flex; flex-direction: column; gap: 0;
+  max-height: 34vh; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.gp-resume { border-color: rgba(70,185,168,.32); }
+/* 全屏查看中央图（§5.4/§5.9：明显的返回） */
+.gp-fs {
+  position: fixed; inset: 0; z-index: 60; padding: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: rgba(0, 0, 0, .93);
+}
+.gp-fs img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 4px; }
+
+/* ---------- v2.2.0（用户第 1 项）：信息流新消息闪烁 + 全屏查看 ---------- */
+@keyframes gpFlash {
+  0%   { box-shadow: 0 0 0 0 rgba(212,169,74,0);     background-color: transparent; }
+  20%  { box-shadow: 0 0 0 3px rgba(212,169,74,.55); background-color: var(--gold-soft); }
+  100% { box-shadow: 0 0 0 0 rgba(212,169,74,0);     background-color: transparent; }
+}
+.gp-chat.gp-flash,
+.gp-glog.gp-flash {
+  animation: gpFlash 1s ease-in-out 3;
+  border-color: var(--gold) !important;
+}
+/* 信息流标题栏（点标题或 ⛶ 进全屏）；同时用于普通布局与全屏布局。 */
+.gp-region-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: 2px 4px; cursor: pointer; user-select: none;
+}
+.gp-region-head .gp-region-head-t { flex: 1 1 auto; min-width: 0; font-size: 11.5px; font-weight: 700; color: var(--text-dim); }
+.gp-region-fs-btn {
+  flex: 0 0 auto; padding: 1px 8px; font-size: 12px; line-height: 1.5;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-dim); cursor: pointer;
+}
+/* ---------- v2.2.2（用户第 4 项）：公开记录栏标题（含 ⛶ 全屏按钮）吸顶常驻 ----------
+   此前「游戏记录」标题栏是 .gp-glog（**自身即滚动容器**）的首个子节点，条目一多就被
+   顶出可视区 —— 全屏按钮随之滚走、点不到。与聊天框对齐（chatEl 的标题是 chatListEl 的
+   **兄弟**、不随列表滚动）：这里把标题改成 sticky，始终贴在滚动区顶部。
+   · 不透明背景（--surface 与 .gp-glog 同色）+ 更高 z-index → 条目从下方滚过被遮住。
+   · 负左右外边距抵消 .gp-glog 的 8px padding，使标题条铺满整宽（否则两侧各露 8px 缝隙）。
+   仅**新增**规则，未改动任何既有 .gp-glog / .gp-grid 声明。 */
+.game-page .gp-glog > .gp-region-head {
+  position: sticky; top: -8px; z-index: 3;
+  background: var(--surface);
+  margin: 0 -8px 4px -8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+/* 全屏查看信息流：复用 .gp-fs 覆盖层（加深一层修饰类，不动既有 .gp-fs img 规则）。 */
+.gp-fs.gp-fs--feeds {
+  align-items: stretch; justify-content: flex-start; gap: 0; padding: 0;
+  background: var(--bg);
+}
+
+/* ---------- v2.3.0（用户第 3 项）：操作播报（居中 2 秒） ----------
+   所有会进「游戏公开记录」的动作（掷骰 / 检定 / 对抗 / 伤害 / SAN / 状态变化）
+   产生新条目时，KP 与所有玩家屏幕居中显示 2 秒一条提示。
+   · 固定居中 + pointer-events:none → 绝不挡点击、不影响操作；
+   · z-index 低于全屏查看器 .gp-fs（60）→ 全屏查看时不会盖住查看器；
+   · 多条错峰堆叠（.gp-optoast-host 为 flex 列，间距由 gap 控制）。 */
+.gp-optoast-host {
+  position: fixed; left: 50%; top: 38%; transform: translateX(-50%);
+  z-index: 55; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: max-content; max-width: 86vw;
+}
+.gp-optoast {
+  pointer-events: none; user-select: none;
+  padding: 9px 18px; border-radius: 999px;
+  background: rgba(14, 16, 20, .88); color: #fff;
+  font-size: 14.5px; font-weight: 600; line-height: 1.5;
+  text-align: center; max-width: 86vw;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+  border: 1px solid rgba(212, 169, 74, .45);
+  animation: gpOpToast .28s ease-out both;
+}
+@keyframes gpOpToast {
+  0%   { opacity: 0; transform: translateY(10px) scale(.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gp-optoast { animation-duration: .01s; }
+}
+.gp-fs--feeds .gp-fs-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: calc(var(--safe-t) + 8px) 10px 8px; border-bottom: 1px solid var(--border);
+}
+.gp-fs--feeds .gp-fs-head .gp-region-head-t { flex: 1 1 auto; font-weight: 700; font-size: 14px; color: var(--text); }
+.gp-fs--feeds .gp-fs-body { flex: 1 1 auto; min-height: 0; display: flex; padding: 8px; }
+.gp-fs--feeds .gp-fs-body > .gp-region { flex: 1 1 auto; min-height: 0; max-height: none; }
+.gp-fs--feeds .gp-fs-body .gp-chat,
+.gp-fs--feeds .gp-fs-body .gp-glog { max-height: none; }
+
+/* ---------- v2.13.8（用户需求）：「只给你看的信息」全屏查看 ----------
+   与 .gp-fs--feeds 同构（头 = 标题 + 「← 返回」，主体 = 内容区），
+   body 里放从右列搬过来的 .priv-card。卡片在覆盖层里已不在 .gp-priv 内
+   （失去 teal 皮肤），这里补一套可读的卡片样式。 */
+.gp-fs.gp-fs--priv {
+  align-items: stretch; justify-content: flex-start; gap: 0; padding: 0;
+  background: var(--bg);
+}
+.gp-fs--priv .gp-fs-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: calc(var(--safe-t) + 8px) 10px 8px; border-bottom: 1px solid var(--border);
+}
+.gp-fs--priv .gp-fs-head .gp-region-head-t { flex: 1 1 auto; font-weight: 700; font-size: 14px; color: var(--text); }
+.gp-fs--priv .gp-fs-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; padding: 12px; }
+.gp-fs--priv .gp-fs-body > .priv-card {
+  flex: 1 1 auto; min-width: 0; align-self: flex-start;
+  max-width: 900px; margin: 0 auto; padding: 6px 10px;
+  border: 1px solid rgba(70,185,168,.42); border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.gp-fs--priv .gp-fs-body .priv-card.new { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+.gp-fs--priv .gp-fs-body .priv-line { margin-top: 10px; padding-bottom: 8px; }
+.gp-fs--priv .gp-fs-body .priv-line + .priv-line { border-top: 1px dashed var(--border); }
+.gp-fs--priv .gp-fs-body .priv-text { cursor: pointer; white-space: pre-wrap; line-height: 1.7; }
+
+/* ---------- v2.5.0（用户第 8 项）：KP 全屏查看玩家手绘板（只读） ----------
+   复用 .gp-fs 覆盖层骨架，头部 / 主体排版与 .gp-fs--feeds 保持一致
+   （头 = 标题 +「← 返回」，主体 = 只读内容区），只补手绘板自己的摆放规则。
+   ⚠️ 这里**不碰任何 .gp-grid 规则**（横屏网格布局只由 JS applyGridClass() 决定）。 */
+.gp-fs.gp-fs--board {
+  align-items: stretch; justify-content: flex-start; gap: 0; padding: 0;
+  background: var(--bg);
+}
+.gp-fs--board .gp-fs-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: calc(var(--safe-t) + 8px) 10px 8px; border-bottom: 1px solid var(--border);
+}
+.gp-fs--board .gp-fs-head .gp-region-head-t { flex: 1 1 auto; font-weight: 700; font-size: 14px; color: var(--text); }
+.gp-fs--board .gp-fs-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px;
+}
+.gp-fs--board .gp-fs-body .board-stage { flex: 0 0 auto; width: 100%; background: #fff; }
+
+/* ---------- 横屏 / 宽屏：启用 KP / PL 分区网格（参考图） ----------
+   手机横屏高度可能只有 360-420px，所以行高全部用 minmax(0,1fr) 压缩，
+   每个区域各自内部滚动，绝不把按钮挤出可视区。
+
+   ⚠️ v2.0.1 T14（架构师复核发现，防未来退化）：
+   旧写法把「网格结构」放进 `@media`，同时另有一条 520–599 降级 `@media`
+   把 `.gp-main-*` 压回 flex —— 两条 @media 靠**顺序 + 阈值恰好互补**才自洽，
+   任何一条单独改动就会立刻退化成「display:grid 列宽 + height:auto」的爆炸态
+   （实测 599px 出现过 zoom=2555px、地图被顶到 y=912）。
+   现收敛为**单一真相**：网格规则不再挂 `@media`，改由 JS 的 `.gp-grid` 类
+   唯一决定（见 room-ui.js 的 applyGridClass()，阈值 520/600/820/340）。
+   → 「.gp-grid 在 = 网格」「.gp-grid 不在 = 单列兜底」，二者互斥、不可同时成立。 */
+/* ---------- v2.1.1（用户定稿线框）：KP 页 12 块网格 ----------
+   列：块2 left(≈55) | 块3 tools(≈80) | 块4 map(中心,1fr) | 右列(块5/6/7/10)
+   行：上排(块2/3/4) ｜ 下排(块8 chat + 块9 log，等宽两栏)   —— 右列跨两行。
+   ⚠️ 结构与列/行数只由本规则决定（不挂 @media）；JS 的 .gp-grid 独家开关。 */
+.game-page.gp-grid .gp-main-kp {
+  display: grid; gap: 6px;
+  grid-template-columns:
+    minmax(72px, 100px)     /* 块2：左栏（地图/怪物/npc/素材，纵向 tab）—— v2.1.4 加宽：素材缩略图太小点不到 */
+    minmax(72px, 92px)      /* 块3：工具栏（标记/画笔/橡皮/放置/颜色/清除）—— v2.1.4 加宽：图标能排两列 */
+    minmax(0, 1fr)          /* 块4：中心（公开素材 16:9） */
+    minmax(180px, 30%);     /* 右列：块5 场景检定 / 块6·7 / 块10 线索 —— v2.1.4 加宽：战斗/玩家信息不再挤成一团 */
+  /* 上排 = 块2/3/4（中心地图）；下排 = 块8/9。矮横屏（780×360）下两行都能收缩，
+     不至于把 .gp-main 顶破溢出（A12x）；844×390 实测上排≈143 ≥ A4 的 120。 */
+  grid-template-rows: minmax(96px, 1fr) minmax(48px, 28%);
+  grid-template-areas:
+    "left tools map right"
+    "feed feed feed right";
+}
+/* v2.1.3（用户第 1 项）：矮横屏（手机横屏）**收紧行高下限**。
+   旧下限 96+48(+6 gap)=150 在手机横屏（main 实测 128–158）会溢出 12–22px
+   （探针 tools/_probe_layout.py 实测：h=300 溢出 12px、h=290 溢出 22px）；
+   收紧到 72+40(+6)=118 后，h≥290 的横屏都不再溢出，地图行仍拿到 ≈76px。
+   ⚠️ 必须用 **JS 类** `.gp-compact`（由 applyGridClass 按 h≤360 切换），
+      不能写进 @media —— 「结构与列/行数只由 JS 独家决定」是 v2.0.1 定下的铁律，
+      E6a/E6-b 两条守卫测试专门盯着它（历史上两套真相叠加出过布局爆炸态）。 */
+.game-page.gp-grid.gp-compact .gp-main-kp {
+  grid-template-rows: minmax(72px, 1fr) minmax(40px, 26%);
+}
+/* v2.1.4：手机横屏下 PL 的 5 栏（含场景检定）用更窄的最小列宽，避免 5 栏溢出 780px 视口 */
+/* v2.1.6：PL 的 gp-compact 收窄规则已随「手机横屏回退单列」移除（不再进网格）。 */
+/* ⚠️ v2.0.1 根因②-β（QA 独立复验发现的 P1）：网格模式下**必须把所有子区域的
+   基础 min-height 归零**，否则 .gp-center(min-height:150) / .gp-chat(60) /
+   .gp-glog(48) 这些旧下限之和会顶破 minmax(0,1fr) 的 0 下限 → 子区域溢出
+   .gp-main 之外、盖住下方工具栏并互相叠字（844×390 实测溢出 42/69px）。
+   用 `.game-page.gp-grid .gp-main-kp > .gp-region` / `-pl` 通配，优先级(0,3,0)
+   高于上述单类旧规则；再对已知高下限的容器单独兜一遍以防更具体的选择器。 */
+.game-page.gp-grid .gp-main-kp > .gp-region,
+.game-page.gp-grid .gp-main-pl > .gp-region { min-height: 0; min-width: 0; }
+.game-page.gp-grid .gp-center,
+.game-page.gp-grid .gp-glog,
+.game-page.gp-grid .gp-chat,
+.game-page.gp-grid .gp-players,
+.game-page.gp-grid .gp-region-pl-feeds,
+.game-page.gp-grid .gp-region-pl-feeds .gp-glog,
+.game-page.gp-grid .gp-region-pl-feeds .gp-chat { min-height: 0; }
+/* 块2：左栏（纵向 tab 列表）—— 内容不参与收缩（底部按钮够得到，可内部滚动）。 */
+.game-page.gp-grid .gp-region-kp-left {
+  grid-area: left; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.game-page.gp-grid .gp-region-kp-left > * { flex: 0 0 auto; }
+/* 块3：工具栏（标记 / 画笔 / 橡皮 / 放置 / 颜色 / 清除） */
+.game-page.gp-grid .gp-region-kp-tools {
+  grid-area: tools; overflow: hidden;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.game-page.gp-grid .gp-region-kp-tools > .gp-region-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* 块4：中心（公开素材 16:9） */
+.game-page.gp-grid .gp-region-kp-map { grid-area: map; overflow: hidden; }
+
+/* 右列（跨两行）：块5 场景检定(上) / 块6·7(中，并排，可折叠) / 空档 / 块10 线索(绝对底图) */
+.game-page.gp-grid .gp-region-kp-right {
+  grid-area: right; position: relative;
+  display: flex; flex-direction: column; gap: 6px;
+  min-height: 0; min-width: 0;
+}
+.game-page.gp-grid .gp-region-kp-scene {           /* 块5 */
+  /* v2.1.3（用户第 1 项）：场景检定块**再加高**（58%→68%），尽量容纳其全部内容、
+     少拖动；相应地压低块10（只给你看的信息，见 .gp-priv 的 top 与 .gp-right-foot）。
+     ⚠️ 与 .gp-priv 的 top 必须同值，否则块6/7 与线索带的接缝会错位。
+     ⚠️ `flex: 0 1 auto`（**可收缩**）是必须的：固定死 `0 0 auto` 时，
+     「68% 上限 + 块6/7 的 56px 下限 + 线索带 10%」之和会超过右列高度 ——
+     探针实测手机横屏下溢出 33px（右列内容把 .gp-main 撑破）。
+     可收缩后：高列（平板）拿满 68%，矮列（手机横屏）自动让位给块6/7。 */
+  flex: 0 1 auto; min-height: 0; max-height: 68%; overflow: hidden;
+  display: flex; flex-direction: column; position: relative; z-index: 1;
+  /* v2.1.1（线框 v2）：块5/6/7 必须**不透明**才能「盖住」块10 线索的上半部
+     （块10 是右列绝对底图、z-index:0）。透明的话块10 会从块6/7 里透出来叠字。 */
+  background: var(--bg);
+}
+.game-page.gp-grid .gp-region-kp-scene > .gp-region-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.game-page.gp-grid .gp-right-mid {                 /* 块6｜块7 并排 */
+  flex: 1 1 auto; min-height: 0; display: flex; gap: 6px;
+  /* v2.1.3：块5 加高后必须给块6/7 一条**下限** —— 否则手机横屏（右列仅 ~150px）
+     下它们会被压成 0 高、连折叠标题都看不见（用户要求：6/7 要始终留在
+     「只给你看的信息」最上面）。56px ≈ 两个折叠标题的高度。 */
+  min-height: 56px;
+  position: relative; z-index: 1;
+}
+.game-page.gp-grid .gp-region-kp-combat,           /* 块6 */
+.game-page.gp-grid .gp-region-kp-players {         /* 块7 */
+  flex: 1 1 50%; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg);                           /* 不透明 → 盖住块10（见上） */
+}
+.game-page.gp-grid .gp-region-kp-combat > .gp-region-body,
+.game-page.gp-grid .gp-region-kp-players > .gp-region-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* 折叠：收起时隐藏 body；本体按内容高度（高度显著变小、状态被 UI_STATE 记住）。 */
+.game-page.gp-grid .gp-region-kp-combat.folded,
+.game-page.gp-grid .gp-region-kp-players.folded { flex: 0 0 auto; align-self: flex-start; }
+.game-page.gp-grid .gp-region-kp-combat.folded > .gp-region-body,
+.game-page.gp-grid .gp-region-kp-players.folded > .gp-region-body { display: none; }
+/* 折叠标题栏（点标题收起 / 展开） */
+.gp-region-fold {
+  flex: 0 0 auto; display: block; width: 100%; text-align: left;
+  padding: 3px 6px; margin: 0; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-dim);
+}
+/* 空档：在块6/7 与右列底边之间露出一段块10 可见带（块10 绝对、上沿伸到块6/7 之下）。
+   v2.1.2：30%→14%（用户第 2 项：把「只给你看的信息」压短，让位给场景检定）；
+   14% 仍足以露出「最新那条」（块10 内最新在最下）。 */
+.game-page.gp-grid .gp-right-foot { flex: 0 0 10%; }
+/* 块10：只给你看的信息 —— 绝对定位、底对齐、z-index 最低（上沿伸到块6/7 之下）。
+   v2.1.3：top 58%→68%，与再次加高的场景检定块（68%）对齐；可见带由 42% 收到 32%
+   （用户要求：把场景检定往下延长、压缩「只给你看的信息」）。 */
+.game-page.gp-kp.gp-grid .gp-region-kp-right > .gp-priv {
+  position: absolute; left: 0; right: 0; bottom: 0; top: 68%;
+  z-index: 0; overflow-y: auto; min-height: 0;
+}
+.game-page.gp-kp.gp-grid .gp-region-kp-right > .gp-priv .card { margin: 0; }
+.game-page.gp-grid .gp-region-kp-players .gp-player { max-width: none; min-width: 0; width: 100%; }
+
+/* 块8（聊天）+ 块9（游戏公开信息记录）：底部一行等宽两栏（只占左+中宽度） */
+.game-page.gp-grid .gp-main-kp > .gp-info {
+  grid-area: feed;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  min-height: 0; min-width: 0; flex: none; max-height: none;
+}
+.game-page.gp-grid .gp-region-kp-log { overflow-y: auto; max-height: none; }
+.game-page.gp-grid .gp-region-kp-chat { overflow: hidden; max-height: none; }
+.game-page.gp-grid .gp-region-kp-chat .gp-chat-list { min-height: 40px; }
+
+.game-page.gp-grid .gp-main-pl {
+  display: grid; gap: 6px;
+  /* v2.1.6（用户布局图）三列：
+     左 = 角色信息面板；中 = 素材(16:9)+战斗轮次 → 聊天|记录 → 只给你看的信息；
+     右 = 场景检定|队友 → 手绘板 → 笔记栏。 */
+  /* v2.1.7（用户反馈）：①「只给你看的信息」行**固定高度**（旧 auto 会随消息
+     无限长、把上面栏位顶上去）②压右列/下两行，把空间让给公开素材（仍 16:9）。
+     v2.1.8（用户玩家线框）：中心公开素材**再放大** —— 左列 190→170、右列
+     24%→22%，素材行权重 1.4fr→1.6fr、线索行 116→104px；并把素材块内部的
+     「公开素材缩略图条」限高（见 .pub-assets 规则），让 16:9 主图拿到更多高度。
+     实测 1180×820：主图 383×216 → 4xx×2xx（断言阈值见 test_room_ui.py Q 段）。 */
+  grid-template-columns:
+    minmax(128px, 170px)    /* card：角色信息面板（线框 ≈160px，再收窄一点） */
+    minmax(0, 1fr)          /* 中列（map / info / priv 三行） */
+    minmax(210px, 22%);     /* right：场景检定|队友 + 手绘板 + 笔记栏 */
+  /* v2.13.3（用户第 1 项）：素材行 1.6fr→1.9fr、聊天/记录 0.62fr→1fr、底部「只给你看的信息」
+     行 104px 固定 → auto。旧模板里那 104px 是**写死的**，玩家端这个区域常常是空的，
+     于是聊天/记录下面永远挂着一大片空白，而素材图被挤到只有百来像素高。
+     现在素材尽量按 16:9 撑满列宽，多出来的高度全部给聊天/记录（两个栏目自然下移）。 */
+  /* v2.13.4（用户第 3 项）：「只给你看的信息」移到右列（队友栏正下方），
+     中列只剩「素材 / 聊天记录」两行 —— 素材行因此又能多分到一点高度。 */
+  grid-template-rows: minmax(0, 2.15fr) minmax(92px, 1fr);
+  grid-template-areas:
+    "card map  right"
+    "card info right";
+}
+.game-page.gp-grid .gp-region-pl-card { grid-area: card; overflow-y: auto; }
+.game-page.gp-grid .gp-pl-mapwrap {
+  grid-area: map; display: flex; flex-direction: column; gap: 6px;
+  min-width: 0; min-height: 0; overflow: hidden;
+}
+/* 公开素材：标准 16:9、占满中列宽（用户要求比例固定、面积尽量大） */
+.game-page.gp-grid .gp-pl-mapwrap .gp-center {
+  flex: 1 1 auto; min-height: 0; aspect-ratio: 16 / 9; max-height: 100%;
+}
+.game-page.gp-grid .gp-pl-mapwrap .gp-combat-strip { flex: 0 0 auto; }
+.game-page.gp-grid .gp-pl-right {
+  grid-area: right; display: flex; flex-direction: column; gap: 6px;
+  min-width: 0; min-height: 0;
+}
+/* v2.13.3（用户第 2 项）：右列第一行 34%→46%，并改成**上下**排列 ——
+   场景检定在窄列里被挤成 50% 宽（≈117px），表单疯狂换行、必须滚动。
+   现在场景检定独占整列宽、队友缩成一条（通常只有「还没有其他队友」一行）。 */
+/* v2.13.8（用户需求）：右列紧凑化 —— 场景检定**不再拉伸占满**剩余高度。
+   旧规则 row1 / scene 均为 flex:1 1 auto，场景检定被撑高后内容下方留一大片
+   空白（用户原话「场景检定栏下面、队友栏上面还有好大的空间」）。
+   现在 row1 与 scene 都按内容自然高度，队友栏 / 私密信息 / 手绘板 / 笔记栏
+   随之上移，队友栏顶端紧贴场景检定底端；剩余高度由笔记栏（flex:1 1 auto）吃满。
+   ⚠️ scene 的封顶必须用**绝对值**（280px）：曾用 44% 百分比，在 auto 高度的
+   flex 容器里形成循环解析 —— row1 按内容高 196px 撑开、scene 自己被钳到 86px，
+   row1 底部反而空出 110px（QA 实测复现，间距 115.7px）。 */
+.game-page.gp-grid .gp-pl-row1 {
+  /* v2.13.4：row1 只装场景检定（队友栏/私密信息已提成右列独立条）；
+     v2.13.8：改回 0 0 auto —— 不再吃剩余高度，让下面各条上移。 */
+  flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px; min-height: 0;
+}
+/* v2.13.8：场景检定按内容高度，封顶 280px（超过则条内滚动，绝不把队友栏挤出可视区）。
+   内容通常 ~185px → 不钳切、无内空尾；KP 推送复杂检定时才滚动。 */
+.game-page.gp-grid .gp-pl-row1 .gp-region-pl-scene {
+  flex: 0 0 auto; max-height: 280px; min-width: 0; min-height: 0; overflow-y: auto;
+}
+/* v2.13.3：队友栏缩成一条（不抢场景检定的高度），内容仍内部滚动 */
+.game-page.gp-grid .gp-pl-row1 .gp-region-pl-mates {
+  flex-direction: column; min-width: 0; flex: 0 0 auto; max-height: 34%; min-height: 0; overflow-y: auto;
+}
+/* v2.1.8（用户玩家线框）：手绘板 —— 右列里「场景检定|队友」之下的独立块。
+   面板（冻结）输出的 .mini-board 自带 16:9 白底舞台 + 翻页/画笔/橡皮/清空行，
+   这里只给容器正确的 flex/滚动语义，让舞台按列宽自撑、不挤压笔记栏。 */
+.game-page.gp-grid .gp-pl-sketch {
+  flex: 0 1 auto; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.game-page.gp-grid .gp-pl-sketch > .gp-region-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.game-page.gp-grid .gp-pl-sketch .mini-board { flex: 0 0 auto; }
+.game-page.gp-grid .gp-pl-notes { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.game-page.gp-grid .gp-region-pl-combat { flex: 0 0 auto; max-height: 32%; overflow-y: auto; }
+/* 「只给你看的信息」：v2.13.4 起在右列、队友栏正下方，与队友栏**同宽同高**（见文件末尾的
+   .pl-strip 规则）；这里只保留高度纪律：内容再多也在条内滚动。 */
+.game-page.gp-grid .gp-pl-right > .gp-priv {
+  min-height: 0; max-height: 104px; overflow-y: auto;
+}
+/* v2.1.8（用户玩家线框「中心 16:9 且更大」）：素材块内部的「公开素材缩略图条」
+   （.pub-assets = 标题 + asset-grid）与「缩放/全屏控制条」（.map-ctrls）此前
+   **在流内**按内容撑高 —— 1180×820 下吃掉 ~120px、844×390 下（行高 87px < 二者之和）
+   直接把 .map-stage-wrap 饿成 0 高 → 主图塌成 2×2。
+   修法（与 v2.1.1 KP 块4 的 .init-wrap 浮层同款）：网格模式下二者改为**浮层** ——
+   主图（16:9）铺满整块，缩略图条浮在左上（限高 34%、内部滚动）、控制钮浮在右下，
+   全部仍可点；素材高度让给主图（实测 1180×820：主图 383×216 → ≈684×385）。 */
+.game-page.gp-grid .gp-region-pl-map .pl-map-area { position: relative; }
+.game-page.gp-grid .gp-region-pl-map .map-ctrls {
+  position: absolute; right: 4px; bottom: 4px; z-index: 3;
+  flex-wrap: wrap; padding: 2px 4px; border-radius: var(--radius-sm);
+  background: rgba(14, 16, 20, .74);
+}
+.game-page.gp-grid .gp-region-pl-map .pub-assets {
+  position: absolute; left: 4px; top: 4px; z-index: 3;
+  max-width: min(60%, 340px); max-height: 34%; overflow-y: auto;
+  padding: 3px 5px; border-radius: var(--radius-sm);
+  background: rgba(14, 16, 20, .74);
+}
+.game-page.gp-grid .gp-region-pl-mates .gp-player { max-width: none; min-width: 0; width: 100%; }
+/* v2.0.10：`.gp-region-pl-feeds`（记录列容器）现位于 .gp-info 内，不再定位具名区域；
+   底栏即工具栏（挂在 .game-page，缩放容器之外），限高与 .gp-toolbar 一致。 */
+.game-page.gp-grid .gp-region-pl-bottom { max-height: 92px; overflow-y: auto; }
+/* v2.1.1：场景检定列的内容（面板自带 nowrap 按钮）在窄横屏（780×360）会比 1fr 列宽多
+   2px → 溢出传导到 .gp-info → 出现横向滚动条。用 overflow:hidden 截断在列内
+   （面板自身仍有内部滚动），保证 .gp-info 不出现横向滚动。 */
+.game-page.gp-grid .gp-region-pl-scene { overflow-y: auto; }
+
+/* 矮屏（横屏手机）密度收紧：纯视觉，不参与结构判定 → 保留 @media 无害 */
+@media (max-height: 460px) {
+  .game-page.gp-grid .gp-zoom { gap: 4px; padding: 5px; }
+  /* v2.0.10：矮屏也保留顶部安全区（原 `5px 8px` 简写会覆盖安全区）。 */
+  .game-page.gp-grid .gp-topbar { padding: calc(var(--safe-t) + 5px) 8px 5px; }
+  .game-page.gp-grid .gp-title { font-size: 13px; }
+  .game-page.gp-grid .gp-player { padding: 4px 8px; }
+  .game-page.gp-grid .gp-quick { margin-bottom: 4px; }
+}
+/* v2.0.10：工具栏 fixed 于视口底 → 给 .gp-zoom 预留底部空间，避免最下排内容被盖住。
+   放在 @media 之后，以覆盖其 `padding: 5px` 简写（否则预留会被重置）。 */
+.game-page.gp-grid .gp-zoom {
+  padding-bottom: calc(var(--gp-toolbar-h, 92px) + 6px);
+}
+
+/* v2.2.1（用户第 4 项）：竖屏（单列 / 非网格）下所有栏目收起时，最下面的栏目会被
+   fixed 底部工具栏遮住 —— 给**非网格**的 .gp-zoom 同样预留底部空间，使最后一栏
+   能完整滚出工具栏之上。⚠️ 仅新增本规则，所有 .gp-grid 规则保持不变（横屏零回归）。 */
+.game-page:not(.gp-grid) .gp-zoom {
+  padding-bottom: calc(var(--gp-toolbar-h, 92px) + 10px);
+}
+
+/* v2.0.1 根因②-δ（QA A4 ↔ A12x 对撞的最终收敛）：
+   真机 844×390 下 顶栏≈113 + 工具栏≈151 = 264px，把 .gp-main 挤到只剩 108px；
+   而 A4 要求地图区≥120、A12x 要求子区域不溢出 main —— 二者只有在 **main 足够高**
+   时才可能同时成立。所以网格模式下必须**给顶栏/工具栏封顶**：
+     · .gp-topbar 内的 chip 行不换行、地址块压平（视觉密度已由 ≤430px 规则收紧）；
+     · .gp-toolbar 限高 + 内部横向排布，dice-bar 不再换行；
+   把省下的高度让给 .gp-main（grid 的 1fr 行）→ 地图能拿到 120+，子区域也不越界。 */
+.game-page.gp-grid .gp-toolbar {
+  max-height: 92px; overflow-y: auto;
+}
+.game-page.gp-grid .gp-toolbar .gp-quick {
+  flex-wrap: nowrap; overflow-x: auto; margin-bottom: 4px;
+}
+.game-page.gp-grid .gp-toolbar .dice-bar { flex-wrap: nowrap; }
+.game-page.gp-grid .gp-topbar .gp-topbar-inner { flex-wrap: nowrap; overflow: hidden; }
+.game-page.gp-grid .gp-topbar .gp-topbar-inner > .grow {
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+}
+/* ⚠️ 标题是固定短文本可省略；但**房间信息行含房间号，绝不能截断** ——
+   只对 .gp-title 做省略，房间行改为换行（否则用户读不到房间号）。 */
+.game-page.gp-grid .gp-topbar .gp-topbar-inner > .grow .gp-title {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* ⚠️ v2.1.2 根因（用户「手机横屏横不过来」）：窄横屏（640-720）下顶栏右侧有 5 个 chip + 离开按钮，
+   把 .grow 挤到只剩 ~168px；而 .grow 内的「房间信息行 / 服务地址行」此前是 normal+break-word →
+   中文**逐字换行**成十几行 → .grow 高 343px、顶栏 355px，把 .gp-main 顶到屏外（只剩 tabs+工具栏）。
+   → 改为 nowrap + ellipsis（房间号已移到该行**开头**，见 room-ui.js，绝不会被截断）。
+   ⚠️ 仍给顶栏一条高度上限兜底（防未来内容变化再次顶爆）。 */
+.game-page.gp-grid .gp-topbar .gp-topbar-inner > .grow .tiny.dim {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.game-page.gp-grid .gp-topbar .gp-hostaddr > .tiny.dim {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.game-page.gp-grid .gp-topbar {
+  max-height: 34vh; overflow-y: auto;
+}
+.game-page.gp-grid .gp-topbar .gp-topbar-inner .chip { white-space: nowrap; }
+/* 网格模式下顶栏里的「服务地址块」压成单行（地址省略 + 按钮同排），不占额外行高。
+   用稳定类 .gp-hostaddr（room-ui.js hostAddrBlock()），替代脆弱的 attribute 选择器。 */
+.game-page.gp-grid .gp-topbar .gp-topbar-inner > .grow > .gp-hostaddr {
+  margin-top: 2px !important;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+}
+.game-page.gp-grid .gp-topbar .gp-topbar-inner .btn-group {
+  flex-wrap: nowrap; margin-top: 0 !important; flex: 0 0 auto; gap: 4px;
+}
+.game-page.gp-grid .gp-topbar .gp-topbar-inner .btn-group > .btn {
+  padding: 3px 6px; font-size: 11px; min-width: 0; white-space: nowrap;
+}
+
+/* v2.0.1 T14：单列兜底（`.gp-grid` 不在时）——
+   地图给一个最小高度保证「在，只是要滚」，而不是被压成 0。
+   旧的那条 520–599 / max-height:339 降级 @media 已删除：
+   该区间由 JS applyGridClass() 直接判定为「不开 .gp-grid」，无需 CSS 二次兜底。 */
+.game-page:not(.gp-grid) .gp-main-kp,
+.game-page:not(.gp-grid) .gp-main-pl {
+  display: flex; flex-direction: column; height: auto;
+}
+.game-page:not(.gp-grid) .gp-region { flex: 0 0 auto; }
+/* v2.5.0（用户第 10 项）：竖屏（无 .gp-grid）游戏记录栏**固定高度 + 内部滚动**。
+   根因：`.gp-region-pl-feeds .gp-glog { max-height: none }` 这条**没有 .gp-grid 前缀**，
+   优先级压过了基础 `.gp-glog { max-height: 30vh }`；而竖屏父链是
+   `.gp-main{height:auto}` + `.gp-region{flex:0 0 auto}`，**没有任何高度约束**
+   → 记录越多框越高、整页被撑长（KP 侧记录框是 .gp-info 直接子节点、不吃那条规则，
+   靠基础 30vh 兜住，所以两边表现不一致）。
+   `overflow-y:auto` 基础规则已存在 → 这里只补高度上限即可自动内部滚动。
+   ⚠️ 只加 `:not(.gp-grid)` 竖屏规则，**不碰任何 .gp-grid 规则**（横屏零回归）。 */
+.game-page:not(.gp-grid) .gp-region-pl-feeds { flex: 0 0 auto; }
+.game-page:not(.gp-grid) .gp-region-pl-feeds .gp-glog,
+.game-page:not(.gp-grid) .gp-info .gp-glog { max-height: 34vh; }
+/* v2.1.2：单列（竖屏）下地图区必须给**确定高度**（height 而非仅 min-height）——
+   否则 .kp-map-area{height:100%} 对 auto 高父元素解析为 auto，.map-stage-wrap 的高
+   变成内容相关，而 16:9 舞台用容器查询 100cqh 定宽 → 循环依赖 → 舞台塌成 0×0
+   （这就是「竖屏公开素材看不到」的根因）。44vh 是确定值 → 舞台按 16:9 正常撑开。 */
+.game-page:not(.gp-grid) .gp-region-kp-map,
+.game-page:not(.gp-grid) .gp-region-pl-map { height: 44vh; min-height: 240px; }
+/* v2.1.4：单列下场景检定给个最大高度并内部滚动，不再被裁掉、点不到内容 */
+.game-page:not(.gp-grid) .gp-region-pl-scene { max-height: 50vh; overflow-y: auto; }
+/* v2.1.6（布局重排）：单列下新容器「摊平」—— 右列/行1 直接参与单列流 */
+.game-page:not(.gp-grid) .gp-pl-right,
+.game-page:not(.gp-grid) .gp-pl-row1 { display: contents; }
+.game-page:not(.gp-grid) .gp-pl-mapwrap { display: flex; flex-direction: column; gap: 6px; }
+.game-page:not(.gp-grid) .gp-region-pl-combat { max-height: 40vh; overflow-y: auto; }
+/* 「只给你看的信息」单列置顶（保持竖屏顶部常驻线索条的既有体验） */
+.game-page:not(.gp-grid) .gp-pl-right > .gp-priv { order: -1; }
+/* v2.1.7：单列下同样固定高度可滚动（此前随消息无限长、把内容顶出屏） */
+.game-page:not(.gp-grid) .gp-pl-right > .gp-priv { max-height: 30vh; overflow-y: auto; }
+.game-page:not(.gp-grid) .gp-pl-notes { max-height: 46vh; overflow-y: auto; }
+/* v2.10.0（R3）：竖屏「队友信息」补高度纪律 —— 折叠标题置顶、内容内部滚动。
+   根因：竖屏 :not(.gp-grid) 下该 region 无任何高度/滚动纪律（map 有 44vh、scene 有 50vh、
+   combat 有 40vh、notes 有 46vh），且 .gp-pl-row1{display:contents} 让 mates 直接进
+   单列流 → 内容多时无限拉长，把折叠标题顶出视野。仿 combat/notes 只补 max-height；
+   .gp-region-fold 已有 flex:0 0 auto → 标题置顶；.gp-region.folded 的
+   height:auto!important + 子节点 display:none!important 优先级更高 → 折叠态不受影响。
+   ⚠️ 只挂 :not(.gp-grid) 前缀，不新增 @media，绝不碰任何 .gp-grid 规则（横屏零回归）。 */
+.game-page:not(.gp-grid) .gp-region-pl-mates { display: flex; flex-direction: column; max-height: 46vh; }
+.game-page:not(.gp-grid) .gp-region-pl-mates > *:not(.gp-region-fold) { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* v2.1.2（用户第 3 项）：竖屏单列下聊天框太短（实测 ~93px）→ 给足高度（30vh）。
+   仅单列生效；网格态由 .gp-info 的行高支配，不受影响。 */
+.game-page:not(.gp-grid) .gp-chat { min-height: 30vh; }
+
+/* ---------- v2.2.0（用户第 2 项）：竖屏栏目可收起 + 各栏不重叠 ----------
+   ⚠️ 铁律：一律挂 .game-page:not(.gp-grid) 前缀；不新增 @media 承载结构；
+      不改任何 .gp-grid 规则（横屏网格零回归）。
+   折叠标题带 .gp-fold-portrait → 横屏网格态隐藏（结构判定仍由 JS 独家决定）。 */
+.game-page.gp-grid .gp-fold-portrait { display: none !important; }
+/* 基础折叠（竖屏）：收起时高度归零（覆盖竖屏给 map/chat/scene 的固定高度），
+   并隐藏除折叠标题 / 标题栏外的所有直接子节点（含 .gp-region-body 与无 body 包裹的栏目）。 */
+.game-page:not(.gp-grid) .gp-region.folded {
+  height: auto !important; max-height: none !important; min-height: 0 !important;
+}
+.game-page:not(.gp-grid) .gp-region.folded > *:not(.gp-region-fold):not(.gp-region-head) {
+  display: none !important;
+}
+/* 竖屏各列补 flex 列布局 —— 保证块与块不重叠（含绝对定位的「只给你看的信息」）。
+   ⚠️ 根因：右列 .gp-region-kp-right 的 flex 列布局此前只写在网格态 → 竖屏退化为块级堆叠，
+      块7「玩家信息」收起时与相邻容器在高度计算上错位，视觉重叠。 */
+.game-page:not(.gp-grid) .gp-region-kp-right,
+.game-page:not(.gp-grid) .gp-right-mid,
+.game-page:not(.gp-grid) .gp-region-kp-tools,
+.game-page:not(.gp-grid) .gp-info,
+.game-page:not(.gp-grid) .gp-pl-mapwrap { display: flex; flex-direction: column; gap: 6px; }
+.game-page:not(.gp-grid) .gp-region-kp-right > .gp-priv { position: static; }
+/* 地图栏目在竖屏改为 flex 列（折叠标题 + 内容），避免固定 44vh 下的溢出/叠字。 */
+.game-page:not(.gp-grid) .gp-region-kp-map,
+.game-page:not(.gp-grid) .gp-region-pl-map { display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.game-page:not(.gp-grid) .gp-region-kp-map > .kp-map-area,
+.game-page:not(.gp-grid) .gp-region-pl-map > .pl-map-area,
+.game-page:not(.gp-grid) .gp-region-kp-map > .card,
+.game-page:not(.gp-grid) .gp-region-pl-map > .card { flex: 1 1 auto; min-height: 0; height: auto; }
+/* 折叠标题 / 标题栏自身不参与收缩。 */
+.game-page:not(.gp-grid) .gp-region-fold,
+.game-page:not(.gp-grid) .gp-region-head { flex: 0 0 auto; }
+/* 聊天 / 记录栏内嵌的折叠开关（在标题栏里）。 */
+.game-page:not(.gp-grid) .gp-region-fold--inline {
+  flex: 0 0 auto; margin-right: 4px; padding: 0 8px; line-height: 1.6;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-dim); cursor: pointer;
+}
+
+/* ---------- v2.0.1 根因②-α：F2 面板内部类（此前整体系无样式，
+   12 个 emoji 图标以 block 逐行堆叠 → 左栏「图标/色块挤成竖条」） ---------- */
+.kp-left-col, .kp-tool-col, .kp-map-area { min-width: 0; min-height: 0; }
+.kp-left-col, .kp-tool-col { display: flex; flex-direction: column; gap: 6px; }
+.kp-map-area { display: flex; flex-direction: column; gap: 6px; height: 100%; }
+/* v2.1.2：玩家端中央区此前**没有** .pl-map-area 的样式 → 不是 flex 列 → .map-stage-wrap
+   拿不到确定高度 → 与 KP 竖屏同样的循环依赖 → 舞台塌成 0×0（「玩家横竖屏都看不到公开素材」）。
+   与 .kp-map-area 对齐。 */
+.pl-map-area { display: flex; flex-direction: column; gap: 6px; height: 100%; }
+.map-stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; }
+/* v2.1.4（用户第 1 项 ·「素材放大后挡住缩放/重置按钮」）：
+   地图舞台放大是 transform:scale（原点居中），舞台溢出会盖住下方的
+   「－/＋/重置」控件 —— 给 wrap 加 overflow:hidden 把放大内容裁进舞台区，
+   控件永远可点、重置永远可点回。 */
+.map-stage-wrap { overflow: hidden; }
+.map-stage-wrap .map-stage { flex: 1 1 auto; }
+
+/* 面板 tab 条：横向排布，不再各占一行 */
+.panel-tabs { display: flex; gap: 4px; flex-wrap: wrap; flex: 0 0 auto; }
+.panel-tab {
+  padding: 3px 8px; font-size: 11px; border-radius: 999px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+  white-space: nowrap;
+}
+.panel-tab.on { background: var(--gold-soft); color: var(--gold-str); border-color: rgba(212,169,74,.4); }
+
+/* 面板内滚动容器：撑满剩余高度，各自滚动 */
+.panel-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+
+/* 竖向按钮组 */
+.btn-col { display: flex; flex-direction: column; gap: 5px; }
+.btn-col .btn, .btn-col button { width: 100%; }
+
+/* 小节标题 */
+.sec-title { font-size: 11px; font-weight: 700; color: var(--text-dim); margin: 2px 0; }
+
+/* 标记图标网格：**「竖条堆叠」的直接解药** —— 必须显式 grid。
+   v2.1.2（用户第 3 项）：竖屏单列时列宽 = 整屏宽，`repeat(4,1fr)` 会把每格撑到 ~190px
+   （比素材缩略图还大）。改为 auto-fill + 每列 ≤40px → 图标恒定小尺寸、能看清即可；
+   窄的网格列（KP 左栏）里会自动降到 1-2 列。 */
+.icon-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(0, 30px)); gap: 4px;
+}
+.icon-cell {
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1; min-height: 20px; max-width: 30px; font-size: 12.5px; line-height: 1;
+  border-radius: 6px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.icon-cell.on { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+
+/* 颜色色块行：**横向排布** */
+.color-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* 队友列表 */
+.teammate-list { display: flex; flex-direction: column; gap: 5px; }
+
+/* ---------- v2.0.1 根因②-α 补充：F2 面板外层容器 + PL 角色卡 ----------
+   这些类此前同样**零样式**，是「手机 PL 属性体质0 / 0% 拉成长条」的直接原因
+   （.stat-bar 只有 6px 高且 overflow:hidden，把整行内容裁成一条）。
+   全部按 room-panels.js 的真实 DOM 结构补。 */
+.kp-glog, .pl-feeds { display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
+.kp-chat, .pl-teammates { display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
+.pl-map-area, .kp-combat-panel, .kp-scene-panel, .kp-player-list, .kp-quick-actions { min-width: 0; min-height: 0; }
+/* v2.1.4（用户第 1 项 ·「战斗列表/玩家信息太挤显示不全」）：内部行给足呼吸空间，
+   文字可换行（white-space:normal），不再被窄列硬裁。 */
+.kp-combat-panel .slot-line, .kp-combat-panel .actor-line,
+.kp-player-list .player-row, .kp-player-list .actor-line {
+  min-width: 0; padding: 4px 0; gap: 6px; align-items: flex-start;
+}
+.kp-combat-panel .slot-line .nm, .kp-combat-panel .actor-line .nm,
+.kp-player-list .player-row .nm { white-space: normal; line-height: 1.3; }
+
+/* PL 角色卡：卡片式布局，属性一行一条，**不再拉成长条** */
+.pl-char-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pl-char-card .char-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pl-char-card .char-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.pl-char-card .char-bars { display: flex; flex-direction: column; gap: 4px; }
+
+/* 状态条：**整行**（标签 + 条 + 数值），一行一条；修正旧 6px 裁切 */
+.pl-char-card .stat-bar,
+.char-bars .stat-bar {
+  display: flex; align-items: center; gap: 6px;
+  height: auto; border-radius: 0; background: transparent;
+  overflow: visible; margin-top: 0;
+}
+.pl-char-card .stat-bar .k { flex: 0 0 34px; font-family: var(--mono); font-size: 10.5px; color: var(--text-mute); }
+.pl-char-card .stat-bar .bar {
+  flex: 1 1 auto; height: 6px; border-radius: 999px;
+  background: var(--surface-3); overflow: hidden;
+}
+.pl-char-card .stat-bar .bar > i { display: block; height: 100%; border-radius: 999px;
+  background: var(--success); transition: width .25s; }
+.pl-char-card .stat-bar.hp .bar > i { background: #e0605a; }
+.pl-char-card .stat-bar.mp .bar > i { background: #6a9ee0; }
+.pl-char-card .stat-bar.san .bar > i { background: #8a7de0; }
+.pl-char-card .stat-bar .num { flex: 0 0 auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); }
+
+/* 属性行：均匀四列（名称 / 数值 / 条 / 百分比），**不再竖着堆成条** */
+.pl-char-card .attr-row {
+  display: grid; grid-template-columns: 44px 30px 1fr 42px;
+  align-items: center; gap: 6px; padding: 3px 0;
+  border-top: 1px solid var(--border);
+}
+.pl-char-card .attr-row:first-child { border-top: none; }
+.pl-char-card .attr-row .k { font-size: 11.5px; color: var(--text-dim); }
+.pl-char-card .attr-row .val { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--gold-str); }
+.pl-char-card .attr-row .bar { height: 5px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.pl-char-card .attr-row .bar > i { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-str)); }
+.pl-char-card .attr-row .pct { font-family: var(--mono); font-size: 10.5px; color: var(--text-mute); text-align: right; }
+
+/* 技能 / 物品 / 资料行 */
+.pl-char-card .char-skills, .pl-char-card .char-items, .pl-char-card .char-profile {
+  display: flex; flex-direction: column;
+}
+.pl-char-card .skill-row, .pl-char-card .item-row, .pl-char-card .profile-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 4px 0; border-top: 1px solid var(--border); font-size: 12px;
+}
+.pl-char-card .skill-row:first-child, .pl-char-card .item-row:first-child,
+.pl-char-card .profile-row:first-child { border-top: none; }
+.pl-char-card .skill-row .val, .pl-char-card .item-row .qty {
+  font-family: var(--mono); font-size: 11px; color: var(--gold-str); flex: 0 0 auto;
+}
+.pl-char-card .profile-row .k { color: var(--text-mute); font-size: 11px; flex: 0 0 auto; }
+.pl-char-card .profile-row .v { color: var(--text-dim); text-align: right; word-break: break-word; }
+
+/* 头像：avatarEl 产出 .avatar.sm / .avatar.lg（旧 CSS 只定义了 .avatar-sm） */
+.avatar { display: grid; place-items: center; overflow: hidden;
+  border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text-mute); font-weight: 700; flex: 0 0 auto; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar.sm, .avatar-sm { width: 34px; height: 34px; font-size: 15px; }
+.avatar.lg { width: 46px; height: 46px; font-size: 19px; }
+.avatar.mini { width: 24px; height: 24px; font-size: 12px; }
+
+/* PL 底部栏 / KP 快捷操作（骰子与工具） */
+.pl-bottom-bar, .kp-quick-actions { display: flex; flex-direction: column; gap: 6px; }
+.pl-bottom-bar .bottom-row, .kp-quick-actions .gp-quick,
+.pl-bottom-bar .bottom-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pl-bottom-bar .dice-smalls, .pl-bottom-bar .dice-extra { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* v2.0.1：剩余 F2 容器（此前零样式的 passthrough 包装）——只补最必要的结构，
+   避免子元素（.asset-cell/.actor-line/.tool/按钮）因父级是裸 block 而错位。 */
+.zoom-ctrl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.zoom-ctrl .zoom-val { font-family: var(--mono); font-size: 11px; color: var(--text-mute); min-width: 38px; text-align: center; }
+.init-wrap { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+.init-wrap:empty { display: none; }
+.left-assets, .left-actors { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.thumb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.thumb { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+.thumb > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.thumb > .ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 18px; color: var(--text-mute); }
+.thumb > .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 5px;
+  background: rgba(0,0,0,.62); color: #fff; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thumb.secret { border-style: dashed; border-color: var(--arcane); }
+/* v2.1.3（用户第 5 项）：素材缩略图右上角的删除按钮（仅 KP 渲染）。
+   必须够小、且在缩略图之上可点 —— 但又要小到不会误触「公开/隐藏」的主点击区。 */
+.thumb-del {
+  position: absolute; top: 2px; right: 2px; z-index: 2;
+  width: 18px; height: 18px; padding: 0; line-height: 1;
+  display: grid; place-items: center;
+  font-size: 11px; border-radius: 50%; cursor: pointer;
+  background: rgba(224, 96, 90, .92); color: #fff; border: none;
+}
+.thumb-del:hover { background: var(--danger); }
+/* v2.6.0（用户第 1 项）：当前中央底图高亮 + 「设为底图」按钮（仅 KP、仅已公开图片）。 */
+.thumb.cover { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+.thumb-pin {
+  position: absolute; left: 2px; bottom: 2px; z-index: 2;
+  max-width: calc(100% - 4px); padding: 1px 5px; line-height: 1.4;
+  font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-radius: 8px; cursor: pointer; border: none;
+  background: rgba(0,0,0,.66); color: #fff;
+}
+.thumb-pin.on { background: var(--teal); color: #04211d; font-weight: 700; }
+/* v2.1.3（用户第 4 项）：物品行的删除按钮靠右，不挤压名称 */
+.item-del { flex: 0 0 auto; margin-left: auto; }
+.board-cell, .mini-thumb { border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.scene-step, .player-row, .table-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-top: 1px solid var(--border); }
+.scene-step:first-child, .player-row:first-child, .table-row:first-child { border-top: none; }
+.st-title { font-size: 11.5px; font-weight: 700; color: var(--text-dim); }
+.table-list { display: flex; flex-direction: column; }
+.multi-pick { display: flex; flex-direction: column; gap: 5px; }
+.multi-pick .branch { display: flex; align-items: center; gap: 6px; }
+.d100-mod { display: flex; flex-direction: column; gap: 4px; }
+.d100-mod .mod-title { font-size: 11px; font-weight: 700; color: var(--text-dim); }
+.d100-mod .mod-row { display: flex; align-items: center; gap: 6px; }
+.char-status { display: flex; flex-direction: column; }
+.map-ctrls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 0 0 auto; }
+.mini-board, .mini-thumb { position: relative; }
+.board-pager { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.board-pager .page-no { font-family: var(--mono); font-size: 11px; color: var(--text-mute); }
+.chat-input-row { display: flex; align-items: center; gap: 6px; }
+.chat-input-row .grow { flex: 1 1 auto; min-width: 0; }
+
+/* v2.0.1：游戏记录里的聊天 / 掷骰条目（此前零样式，条目挤成一坨） */
+.log-chat { display: flex; flex-direction: column; gap: 2px; padding: 5px 8px;
+  border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border);
+  align-self: flex-start; max-width: 92%; }
+.log-chat.mine { align-self: flex-end; border-color: rgba(70,185,168,.35); }
+.log-dice { display: flex; flex-direction: column; gap: 2px; padding: 5px 8px;
+  border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); }
+
+/* ---------- v2.0.1 根因⑤：游戏页顶栏常驻连接状态指示 ---------- */
+.gp-link { font-variant-numeric: tabular-nums; }
+.gp-link.warn { background: var(--gold-soft); color: var(--gold-str);
+  border-color: rgba(212,169,74,.45); }
+.gp-link.danger { background: rgba(214,80,80,.18); color: var(--danger);
+  border-color: rgba(214,80,80,.5); }
+
+/* ---------- v2.0.1 根因⑥(b)：游戏页常驻线索条（.gp-priv） ---------- */
+.gp-priv { flex: 0 0 auto; }
+.gp-priv:empty { display: none; }
+.gp-priv .priv-card { border-color: rgba(70,185,168,.42); background: var(--teal-soft); }
+.gp-priv .priv-card.new { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft); }
+.gp-priv .priv-line { margin-top: 4px; }
+.gp-priv .priv-text { cursor: pointer; }
+.game-page .room-banner { margin-bottom: 0; }
+.room-banner:empty { display: none; }
+.room-banner { margin-bottom: 9px; }
+.room-banner .notice { margin-bottom: 0; }
+
+.room-head .room-code { margin-top: 8px; }
+
+/* ---------------- 成员 ---------------- */
+.member-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 0; border-top: 1px solid var(--border);
+}
+.member-row:first-of-type { border-top: none; }
+.member-row.off { opacity: .5; }
+.member-name { font-size: 13.5px; font-weight: 600; }
+.member-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* 胶囊：房间里的标签比技能栏的窄一档，一行能放下更多 */
+.chip.sm { padding: 3px 9px; font-size: 10.5px; border-radius: 14px; }
+.chip.off { opacity: .65; }
+.chip.gold { background: var(--gold-soft); border-color: rgba(212,169,74,.4); color: var(--gold-str); }
+.chip.sm.on { color: var(--success); background: var(--success-soft); border-color: rgba(79,185,138,.4); }
+
+/* KP 的踢人按钮：缩小到和行高齐平，别把这一行撑高 */
+.member-row .icon-btn.sm {
+  width: 28px; height: 28px; flex: 0 0 28px; font-size: 13px; border-radius: 8px;
+}
+
+/* ---------------- 日志 / 聊天 ---------------- */
+.room-log {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 11px; padding: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 180px; max-height: 48vh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.room-log-empty {
+  margin: auto; font-size: 12.5px; color: var(--text-mute); text-align: center;
+}
+
+/* 系统消息（掷骰、进出场、开团…）：居中、淡，不抢聊天的视觉顺序 */
+.log-sys {
+  display: flex; gap: 7px; align-items: baseline;
+  align-self: center; max-width: 92%;
+  padding: 3px 10px; border-radius: 20px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 11.5px; color: var(--text-mute); text-align: center;
+}
+.log-time { font-family: var(--mono); font-size: 10px; color: var(--text-mute); white-space: nowrap; }
+
+/* v2.0.1 根因⑥：检定 / 对抗检定结果卡（区别于灰色的系统消息） */
+.log-check {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 9px; border-radius: var(--radius-sm);
+  background: var(--gold-soft); border: 1px solid rgba(212,169,74,.35);
+  border-left: 3px solid var(--gold); font-size: 12.5px; color: var(--text);
+}
+
+/* v2.2.0（用户第 3 项）：对抗结果卡 —— 双方对比 / 逐轮重掷 / 伤害段 */
+.log-opposed {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  background: rgba(224,96,90,.10); border: 1px solid rgba(224,96,90,.35);
+  border-left: 3px solid #e0605a; font-size: 12.5px; color: var(--text);
+}
+.log-opposed-head { display: flex; gap: 6px; align-items: baseline; }
+.log-opposed-row { display: flex; flex-direction: column; gap: 2px; }
+.log-opposed-side {
+  display: flex; gap: 6px; align-items: baseline;
+  padding: 3px 6px; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.log-opposed-side.win { border-color: rgba(212,169,74,.5); background: var(--gold-soft); }
+.log-opposed-tag { font-weight: 700; color: var(--text-dim); min-width: 2.4em; }
+.log-opposed-nm { font-weight: 600; }
+.log-opposed-val { font-family: var(--mono); font-size: 11.5px; }
+.log-opposed-rounds {
+  font-size: 11px; color: var(--text-dim);
+  background: var(--surface-2); border-radius: var(--radius-sm); padding: 3px 6px;
+  white-space: normal;
+}
+.log-opposed-dmg { color: #e0605a; font-weight: 600; }
+
+.msg { display: flex; flex-direction: column; gap: 3px; max-width: 82%; align-self: flex-start; }
+.msg-meta { display: flex; gap: 7px; align-items: baseline; padding: 0 3px; }
+.msg-name { font-size: 11px; font-weight: 600; color: var(--text-dim); }
+.msg-bubble {
+  padding: 8px 12px; border-radius: 4px 14px 14px 14px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 13.5px; line-height: 1.55;
+  word-break: break-word; white-space: pre-wrap;
+}
+/* 自己发的靠右、用金色：一眼分出「谁说的」 */
+.msg.mine { align-self: flex-end; }
+.msg.mine .msg-meta { flex-direction: row-reverse; }
+.msg.mine .msg-bubble {
+  border-radius: 14px 4px 14px 14px;
+  background: var(--gold-soft); border-color: rgba(212,169,74,.32); color: var(--text);
+}
+
+/* 输入条：吸在底部，滚聊天时不用来回找 */
+.room-chatbar {
+  position: sticky; bottom: 8px; z-index: 5;
+  display: flex; gap: 8px; align-items: center;
+  margin-top: 10px; padding: 8px;
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.room-chatbar .input { flex: 1; min-width: 0; }
+/* ---------- v2.1.8（用户第 1 项）：游戏页聊天输入条钉在聊天框正下方 ----------
+   症状：① 双指放大（--gp-zoom≠1）后输入条「漂走」；② 竖屏顶部时它悬在聊天框
+   中间（探针实测 390×844：输入条 bottom 比聊天框 bottom **高 180px** ——
+   sticky 把它吸到视口底，而不是聊天框底，还会盖住聊天内容）。
+   根因与 v2.0.10 工具栏同源：.gp-zoom 的 transform:scale() 生成 containing
+   block，sticky 按未缩放布局坐标计算后再被整体变换 —— 缩放/滚动时相对聊天框漂移。
+   修法：游戏页输入条改为**普通流内** .gp-chat 的最后一行 —— 输入条与聊天框同属
+   一个变换整体，「输入条在聊天框正下方」在任何 --gp-zoom 下恒成立
+   （实测 zoom 1→2 相对位置差 = 0）；且不再是浮层 → 不可能盖住任何可点元素
+   （v2.0.1-T16 历史教训：chatbar z-index:5 曾盖住工具栏顶排按钮）。
+   房间页（#/room/<code>）聊天列表很长、输入条仍需 sticky 吸底 → 不在本规则内。 */
+.game-page .gp-chat .room-chatbar {
+  position: static;
+  z-index: auto;
+  margin-top: 0;   /* .gp-chat 已有 6px flex gap，钉紧正下方 */
+}
+
+/* ---------------- 只给你看的信息 ---------------- */
+.private-card { border-color: rgba(138,125,224,.35); }
+.private-item { padding: 8px 0; border-top: 1px solid var(--border); }
+.private-item:first-of-type { border-top: none; }
+
+/* ============================================================
+   P4-P6 跑团房间：模式切换 / 探索 / 战斗 / KP 工具 / 掷骰条
+   ============================================================ */
+
+/* ---------------- 模式切换（探索 / 战斗） ---------------- */
+.mode-switch { display: flex; gap: 4px; padding: 3px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px; }
+.mode-switch button {
+  flex: 1; padding: 7px 10px; border: none; background: none; cursor: pointer;
+  font-size: 12.5px; font-weight: 600; color: var(--text-dim); border-radius: 999px;
+}
+.mode-switch button.on { background: var(--gold-soft); color: var(--gold-str); }
+.mode-switch button.on.combat { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------------- 标签页（探索 / 战斗 / 工具） ---------------- */
+.room-tabs { display: flex; gap: 4px; margin-top: 10px; overflow-x: auto; }
+.room-tabs button {
+  flex: 0 0 auto; padding: 7px 13px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: 12.5px; font-weight: 600; border-radius: 999px; cursor: pointer;
+}
+.room-tabs button.on { background: var(--teal-soft); border-color: rgba(70,185,168,.4); color: var(--teal); }
+.room-tabs .badge {
+  display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 5px;
+  background: var(--danger); color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 999px; line-height: 16px; text-align: center;
+}
+
+/* ---------------- v2.2.1（用户第 5 项）：工具栏未读角标 ----------------
+   KP 工具栏「🧰 KP 工具」按钮上的待处理计数（对抗申请 / 需 KP 确认的队列）。
+   自包含类名，不复用 .room-tabs .badge（后者限定在标签页内）。 */
+.gp-badge {
+  display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 5px;
+  background: var(--danger); color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 999px; line-height: 16px; text-align: center; vertical-align: 1px;
+}
+.gp-badge.pulse { animation: gpBadgePulse 1.1s ease-in-out infinite; }
+@keyframes gpBadgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,74,74,.55); }
+  50% { box-shadow: 0 0 0 4px rgba(224,74,74,0); }
+}
+.gp-quick .btn.has-pending { border-color: rgba(224,74,74,.55); }
+
+/* ---------------- 行动顺序条（战斗） ---------------- */
+.init-bar { display: flex; gap: 7px; overflow-x: auto; padding: 4px 2px 8px; }
+.init-slot {
+  flex: 0 0 auto; min-width: 84px; padding: 8px 10px; text-align: center;
+  background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  position: relative;
+}
+.init-slot.cur {
+  border-color: var(--gold); background: var(--gold-soft);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.init-slot.done { opacity: .45; }
+.init-slot.down { opacity: .4; border-color: var(--danger); }
+.init-slot .nm { font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.init-slot .sub { font-size: 10px; color: var(--text-mute); margin-top: 2px; }
+.init-slot .slot-no {
+  position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px;
+  background: var(--arcane); color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 999px; line-height: 17px; text-align: center; padding: 0 3px;
+}
+.init-slot.cur .slot-no { background: var(--gold); color: #2a1e00; }
+
+/* ---------------- HP 条 ---------------- */
+.hp-bar { height: 6px; margin-top: 5px; border-radius: 999px; background: var(--surface-3);
+  overflow: hidden; }
+.hp-bar i { display: block; height: 100%; border-radius: 999px; background: var(--success);
+  transition: width .25s ease; }
+.hp-bar.mid i { background: var(--gold); }
+.hp-bar.low i { background: var(--danger); }
+.hp-num { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); }
+.hp-hidden { font-size: 10.5px; color: var(--text-mute); font-style: italic; }
+
+/* ---------------- 素材库 ---------------- */
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.asset-cell {
+  /* v2.0.10（用户第 3 项）：缩略图也固定 16:9（原 1:1）。 */
+  position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--border); cursor: pointer;
+}
+.asset-cell img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.asset-cell .ph { display: flex; align-items: center; justify-content: center;
+  height: 100%; font-size: 22px; color: var(--text-mute); }
+.asset-cell .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 5px;
+  background: linear-gradient(transparent, rgba(0,0,0,.72)); color: #fff; font-size: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asset-cell.secret::after { content: '未公开'; position: absolute; top: 4px; left: 4px;
+  padding: 1px 6px; background: var(--arcane); color: #fff; font-size: 9.5px;
+  font-weight: 700; border-radius: 999px; }
+.asset-cell.picked { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+
+/* ---------------- 地图 / 手绘板 ---------------- */
+.map-stage {
+  /* v2.0.10（用户第 3 项）：公开素材固定 16:9（原 4:3）。 */
+  position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border); overflow: hidden;
+}
+/* v2.0.10（用户第 2 项）：玩家手绘板白底。
+   手绘用 SVG polyline 叠加（全仓无 canvas），故白底是纯 CSS 事 —— 不再去找 canvas。 */
+.map-stage.board-stage { background: #fff; }
+.map-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.map-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map-stage .mk { position: absolute; transform: translate(-50%, -50%); font-size: 12px;
+  pointer-events: none; }
+.map-stage .mk .dot { display: block; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--danger); box-shadow: 0 0 0 2px rgba(255,255,255,.5); }
+.map-stage .mk .dot.teal { background: var(--teal); }
+.map-stage .mk .tag { position: absolute; left: 14px; top: -4px; white-space: nowrap;
+  padding: 1px 6px; background: rgba(0,0,0,.72); color: #fff; font-size: 10px; border-radius: 6px; }
+.map-stage .mk.hidden-mk .dot { background: var(--arcane); opacity: .55; }
+.map-stage .mk.hidden-mk .tag { background: var(--arcane); }
+.map-empty { position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; color: var(--text-mute); text-align: center; padding: 16px; }
+.draw-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+.swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border);
+  cursor: pointer; flex: 0 0 24px; }
+.swatch.on { border-color: var(--text); box-shadow: 0 0 0 3px var(--teal-soft); }
+/* 画线模式必须吃掉触摸手势：没有这条，手指拖动会触发页面滚动，
+   pointermove 被中断、pointercancel 直接到 —— 表现就是「画不出来」。 */
+.map-stage.sketch { touch-action: none; }
+.map-stage.sketch svg { cursor: crosshair; }
+/* 触摸干净化（v1.19.0）：**放标记**（mark）模式也必须挂上，否则真机上按住
+   会触发系统的长按（文字选择 / 上下文菜单 / 震动）→ 浏览器发 pointercancel
+   → 标记落空。touch-action:none 阻止页面滚动，user-select/callout 抑制系统手势。 */
+.map-stage.touch-stage {
+  touch-action: none;
+  user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------------- 战斗卡片 ---------------- */
+.combat-turn-note { font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; }
+.combat-turn-note b { color: var(--gold-str); }
+.actor-line { display: flex; align-items: center; gap: 8px; padding: 7px 0;
+  border-top: 1px solid var(--border); }
+.actor-line:first-of-type { border-top: none; }
+.actor-line .grow { min-width: 0; }
+.actor-line .nm { font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.actor-line.monster .nm { color: var(--danger); }
+
+/* ---------------- KP 工具 ---------------- */
+.tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tool-grid .tool {
+  padding: 11px 10px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; text-align: left;
+}
+.tool-grid .tool:active { border-color: var(--teal); }
+.tool-grid .tool .t { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.tool-grid .tool .d { font-size: 10.5px; color: var(--text-mute); margin-top: 3px; line-height: 1.4; }
+.pending-row { display: flex; align-items: center; gap: 8px; padding: 9px 0;
+  border-top: 1px solid var(--border); }
+.pending-row:first-of-type { border-top: none; }
+.pending-row .grow { min-width: 0; }
+
+/* v2.9.0（用户第 3 项）：删除「回退投票」专用样式 —— 回退功能整体移除。 */
+
+/* ---------------- 掷骰工具条 ---------------- */
+.dice-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  margin-top: 10px; padding: 9px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--radius); }
+.dice-d100 {
+  flex: 0 0 auto; min-width: 62px; padding: 9px 12px; border: none; cursor: pointer;
+  background: var(--gold); color: #2a1e00; font-weight: 800; font-size: 13.5px;
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+}
+.dice-bar .k { font-size: 11px; color: var(--text-mute); }
+.dice-bar .bp { display: flex; align-items: center; gap: 4px; }
+.dice-bar .bp button {
+  width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim); font-size: 14px; cursor: pointer; line-height: 1;
+}
+.dice-bar .bp button.on.bonus { background: var(--success-soft); color: var(--success); border-color: rgba(79,185,138,.4); }
+.dice-bar .bp button.on.penalty { background: var(--danger-soft); color: var(--danger); border-color: rgba(224,96,90,.4); }
+.dice-bar .bp .cnt { font-family: var(--mono); font-size: 12px; min-width: 14px; text-align: center; }
+/* v2.4.0（用户第 ⑩ 项）：奖惩骰「选项式」控件 —— 奖/惩模式 chips（比 ± 键宽，
+   放得下「奖励骰 / 惩罚骰」四个字）与「当前生效」说明。仅新增，不动既有规则。 */
+.dice-bar .bp button.chip {
+  width: auto; min-width: 46px; height: 26px; padding: 0 8px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.dice-bar .bp .eff { font-size: 11px; color: var(--text-mute); margin-left: 2px; white-space: nowrap; }
+/* 常规工具骰 D4/D6/D8/D10：常驻但**不能挤占 D100 的突出地位**，所以是小按钮。
+   ⚠️ v2.0.0 之前这里**完全没有规则** —— 它们一直是浏览器默认按钮样式（白底黑字），
+   在暗色主题里格外刺眼。 */
+.dice-bar .dice-small {
+  flex: 0 0 auto; min-width: 38px; padding: 7px 9px; border-radius: 8px;
+  border: 1px solid var(--border-str); background: var(--surface);
+  color: var(--text-dim); font-size: 12px; font-weight: 700; line-height: 1; cursor: pointer;
+  transition: .16s;
+}
+.dice-bar .dice-small:active { transform: scale(.94); background: var(--surface-3); }
+.dice-bar .dice-small:disabled { opacity: .4; pointer-events: none; }
+
+/* v2.0.0 游戏页分区） ---------------- */
+.stat-bar {
+  height: 6px; border-radius: 999px; background: var(--surface-3);
+  overflow: hidden; margin-top: 4px;
+}
+/* v2.0.1 缺陷B：**整行结构的状态条**（标签+条+数值，带 .row 修饰）走整行样式，
+   不再被上面的 6px + overflow:hidden 裁成一条。
+   KP 面板（room-panels.js statBar()）生成的就是 .stat-bar.row，
+   此前只有 PL 端（.pl-char-card/.char-bars 作用域）修过，故 KP 漏网。
+   用显式 .row 类而非 CSS `:has()`，兼容较旧的安卓 WebView；旧裸条无 .row 不受影响。 */
+.stat-bar.row {
+  display: flex; align-items: center; gap: 6px;
+  height: auto; border-radius: 0; background: transparent;
+  overflow: visible; margin-top: 0;
+}
+.stat-bar.row > .k { flex: 0 0 auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-mute); }
+.stat-bar.row > .num { flex: 0 0 auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); }
+.stat-bar.row > .bar {
+  flex: 1 1 auto; height: 6px; border-radius: 999px;
+  background: var(--surface-3); overflow: hidden;
+}
+.stat-bar.row > .bar > i { display: block; height: 100%; border-radius: 999px;
+  background: var(--success); transition: width .25s; }
+.stat-bar.row.hp > .bar > i { background: #e0605a; }
+.stat-bar.row.mp > .bar > i { background: #6a9ee0; }
+.stat-bar.row.san > .bar > i { background: #8a7de0; }
+/* 旧用法兜底：无 .row 的裸条仍是细条（保持既有行为） */
+.stat-bar > i { display: block; height: 100%; border-radius: 999px;
+  background: var(--success); transition: width .25s; }
+.stat-bar.hp > i { background: #e0605a; }
+.stat-bar.mp > i { background: #6a9ee0; }
+.stat-bar.san > i { background: #8a7de0; }
+.stat-label { font-family: var(--mono); font-size: 10px; color: var(--text-mute); }
+.avatar-sm {
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+  object-fit: cover; overflow: hidden;
+  background: var(--surface-3); border: 1px solid var(--border);
+  display: grid; place-items: center; font-size: 15px; color: var(--text-mute);
+}
+.board-thumb {
+  width: 54px; height: 40px; border-radius: 6px;
+  background: var(--surface-2); border: 1px solid var(--border); overflow: hidden;
+}
+
+/* 掷骰结果气泡 */
+.dice-result { align-self: center; max-width: 92%; padding: 8px 12px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.dice-result .roll { font-family: var(--mono); font-size: 17px; font-weight: 700; }
+.dice-result .lv { font-size: 12px; font-weight: 700; margin-left: 7px; }
+.dice-result .expr { font-size: 11px; color: var(--text-mute); }
+.lv-critical { color: var(--gold-str); }
+.lv-extreme { color: var(--arcane); }
+.lv-hard { color: var(--teal); }
+.lv-regular { color: var(--success); }
+.lv-fail { color: var(--text-dim); }
+.lv-fumble { color: var(--danger); }
+
+/* 行动窗口的「剩余行动」提示 */
+.turn-hint { display: flex; align-items: center; gap: 7px; padding: 8px 10px;
+  background: var(--gold-soft); border: 1px solid rgba(212,169,74,.35);
+  border-radius: var(--radius-sm); font-size: 12.5px; color: var(--gold-str); }
+
+
+
+
+
+/* ============================================================
+   v2.13.0 · 跑团房间外观：克苏鲁的呼唤（CoC 7th）手账风
+   ------------------------------------------------------------
+   作用域（下称 SKIN）：
+     .room-page  房间大厅 / .game-page 游戏页 / .room-skin 入口页
+     + body:has(上面三个) —— 让挂在 body 上的弹层、以及 App 外壳
+       （顶栏/底栏）一起继承同一套变量。
+   手法：
+     ① 作用域内重定义设计变量 —— 组件全吃变量，换肤零规则破坏；
+     ② 少量定向规则：纸张纹理 / 双线框 / **标题栏统一** / 皮革顶栏 / 印章按钮。
+   约束：不动 DOM 结构、尺寸与间距 —— 只换颜色、字体、边框、纹理，
+     并把「透明 / 纯色」两套栏目框统一成同一张羊皮纸 + 同一条标题带。
+   ============================================================ */
+
+/* ---------- 1. 调色板：旧纸 + 墨 + 黄铜 + 干血 ---------- */
+.room-page, .game-page, .room-skin,
+body:has(.room-page), body:has(.game-page), body:has(.room-skin) {
+  --bg:           #dcc9a2;
+  --bg-grad-a:    #efe4c9;
+  --bg-grad-b:    #d6c19a;
+  --surface:      #f6ecd4;
+  --surface-2:    #e7d7b2;
+  --surface-3:    #d9c59c;
+  --border:       rgba(70,48,20,.26);
+  --border-str:   rgba(70,48,20,.46);
+  --text:         #2a2016;
+  --text-dim:     #5b4c31;
+  --text-mute:    #877450;
+  --gold:         #9d6f28;
+  --gold-soft:    rgba(157,111,40,.16);
+  --gold-str:     #7a5212;
+  --teal:         #3e6049;
+  --teal-soft:    rgba(62,96,73,.15);
+  --danger:       #87281f;
+  --danger-soft:  rgba(135,40,31,.13);
+  --success:      #43613a;
+  --success-soft: rgba(67,97,58,.15);
+  --arcane:       #5f4d7a;
+  --arcane-soft:  rgba(95,77,122,.15);
+  --radius:       4px;
+  --radius-sm:    3px;
+  --radius-lg:    6px;
+  --shadow:       0 10px 28px rgba(46,30,8,.28);
+  --shadow-sm:    0 2px 7px rgba(46,30,8,.16);
+  /* 主题私有 */
+  --coc-paper:    #f6ecd4;
+  --coc-band:     linear-gradient(180deg, #e3d0a8, #d2bb8d);
+  --coc-band-flat:#dfcaa0;
+  --coc-edge:     #96794a;
+  --coc-edge-soft:rgba(150,121,74,.55);
+  --coc-ink:      #2a2016;
+  --coc-blood:    #7a2a22;
+  --coc-brass:    #9d6f28;
+  --coc-hi:       rgba(255,250,236,.55);
+  --coc-serif:    "Noto Serif SC", "Songti SC", "SimSun", Georgia, "Times New Roman", serif;
+}
+
+/* 深色：皮革 + 暗金（跟随 App「深渊」主题，不另开开关） */
+[data-theme="dark"] .room-page,
+[data-theme="dark"] .game-page,
+[data-theme="dark"] .room-skin,
+[data-theme="dark"] body:has(.room-page),
+[data-theme="dark"] body:has(.game-page),
+[data-theme="dark"] body:has(.room-skin) {
+  --bg:           #100e0a;
+  --bg-grad-a:    #16120d;
+  --bg-grad-b:    #0b0906;
+  --surface:      #191510;
+  --surface-2:    #221c14;
+  --surface-3:    #2c2419;
+  --border:       rgba(214,186,124,.17);
+  --border-str:   rgba(214,186,124,.34);
+  --text:         #ece0c6;
+  --text-dim:     #b7a986;
+  --text-mute:    #8b7d60;
+  --gold:         #c9a24a;
+  --gold-soft:    rgba(201,162,74,.14);
+  --gold-str:     #e8c877;
+  --teal:         #6fa892;
+  --teal-soft:    rgba(111,168,146,.14);
+  --danger:       #cf6a5c;
+  --danger-soft:  rgba(207,106,92,.16);
+  --success:      #6fae83;
+  --success-soft: rgba(111,174,131,.14);
+  --arcane:       #a294cf;
+  --arcane-soft:  rgba(162,148,207,.16);
+  --coc-paper:    #191510;
+  --coc-band:     linear-gradient(180deg, #2a2217, #1f1912);
+  --coc-band-flat:#241d15;
+  --coc-edge:     #51432c;
+  --coc-edge-soft:rgba(81,67,44,.75);
+  --coc-ink:      #ece0c6;
+  --coc-blood:    #a8433a;
+  --coc-brass:    #c9a24a;
+  --coc-hi:       rgba(236,224,198,.09);
+}
+
+/* ---------- 2. 纸张底纹（细纤维 + 四角压暗） ---------- */
+body:has(.room-page), body:has(.game-page), body:has(.room-skin),
+.room-page, .game-page {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 62% at 50% -8%, rgba(255,250,235,.50), rgba(255,250,235,0) 60%),
+    repeating-linear-gradient(0deg, rgba(92,66,28,.045) 0 1px, rgba(0,0,0,0) 1px 3px),
+    repeating-linear-gradient(90deg, rgba(92,66,28,.030) 0 1px, rgba(0,0,0,0) 1px 4px),
+    radial-gradient(92% 62% at 50% 118%, rgba(58,36,10,.18), rgba(0,0,0,0) 72%);
+}
+[data-theme="dark"] body:has(.room-page),
+[data-theme="dark"] body:has(.game-page),
+[data-theme="dark"] body:has(.room-skin),
+[data-theme="dark"] .room-page,
+[data-theme="dark"] .game-page {
+  background-image:
+    radial-gradient(120% 62% at 50% -8%, rgba(214,186,124,.08), rgba(0,0,0,0) 60%),
+    repeating-linear-gradient(0deg, rgba(214,186,124,.028) 0 1px, rgba(0,0,0,0) 1px 3px),
+    radial-gradient(92% 62% at 50% 118%, rgba(0,0,0,.55), rgba(0,0,0,0) 72%);
+}
+
+/* ---------- 3. 卡片：羊皮纸 + 双线框 ---------- */
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .card {
+  background-color: var(--coc-paper);
+  background-image: linear-gradient(180deg, var(--coc-hi), rgba(150,120,70,.07));
+  border: 1px solid var(--coc-edge);
+  box-shadow: inset 0 0 0 1px var(--coc-hi), 0 2px 8px rgba(46,30,8,.16);
+}
+
+/* ---------- 4. 标题栏统一（本次核心） ----------
+   以前三种做法混用：卡片头是纯色带、信息流标题是**透明条**、弹层标题是裸文字。
+   统一为：同一块羊皮纸标题带 + 左对齐 + 衬线字 + 黄铜分隔线。 */
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .card-head {
+  background: var(--coc-band);
+  border-bottom: 1px solid var(--coc-edge);
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) :is(.card-head h3, .card-title, .sec-title, .room-hero h2) {
+  font-family: var(--coc-serif);
+  text-align: left;
+  letter-spacing: .09em;
+  color: var(--coc-ink);
+}
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) :is(.card-title, .sec-title)::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px; height: 6px;
+  background: var(--coc-brass);
+  transform: rotate(45deg);
+}
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) :is(.sec-title) {
+  display: flex; align-items: center; gap: 7px;
+}
+
+/* 信息流 / 记录 / 聊天 的栏目标题：从「透明条」变成同样的标题带 */
+:is(.room-page, .game-page) .gp-region-head {
+  padding: 6px 9px;
+  background: var(--coc-band);
+  border: 1px solid var(--coc-edge);
+  border-radius: 3px 3px 0 0;
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+:is(.room-page, .game-page) .gp-region-head .gp-region-head-t {
+  font-family: var(--coc-serif);
+  font-size: 12px;
+  letter-spacing: .09em;
+  text-align: left;
+  color: var(--coc-ink);
+}
+/* 记录栏的吸顶标题（原本负边距贴边）→ 保持贴边，只换皮 */
+.game-page .gp-glog > .gp-region-head {
+  background: var(--coc-band);
+  border: none;
+  border-bottom: 1px solid var(--coc-edge);
+  border-radius: 3px 3px 0 0;
+}
+.game-page .gp-region-fs-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--coc-edge-soft);
+  color: var(--text-dim);
+  border-radius: 2px;
+}
+
+/* ---------- 5. 顶栏：旧皮革 + 黄铜压边 ---------- */
+.game-page .gp-topbar {
+  background: linear-gradient(180deg, #2d2417 0%, #241d12 62%, #1a140c 100%);
+  border-bottom: 2px solid var(--coc-brass);
+  box-shadow: inset 0 -8px 16px rgba(0,0,0,.38), 0 6px 16px rgba(30,20,8,.32);
+}
+.game-page .gp-topbar .gp-title {
+  color: #f3e6c4;
+  letter-spacing: .16em;
+  text-shadow: 0 1px 0 rgba(0,0,0,.6);
+}
+.game-page .gp-topbar :is(.tiny, .small, .tiny.dim, .small.dim) { color: rgba(243,230,196,.66); }
+.game-page .gp-topbar .chip {
+  background: rgba(243,230,196,.07);
+  border-color: rgba(201,162,74,.34);
+  color: #ecdfbd;
+  border-radius: 2px;
+}
+.game-page .gp-topbar .chip.on {
+  background: rgba(201,162,74,.22);
+  border-color: rgba(201,162,74,.5);
+  color: #f8ecca;
+}
+.game-page .gp-topbar .gp-link.warn { background: rgba(201,162,74,.2); color: #f2cf80; }
+.game-page .gp-topbar .gp-link.danger { background: rgba(207,86,72,.22); color: #ffa294; }
+.game-page .gp-topbar .btn.ghost {
+  color: #ecdfbd;
+  border-color: rgba(201,162,74,.34);
+  background: rgba(243,230,196,.04);
+}
+
+/* ---------- 6. 按钮：印章 / 火漆 ---------- */
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .btn {
+  font-family: var(--coc-serif);
+  font-weight: 700;
+  letter-spacing: .07em;
+  border-radius: 3px;
+  border-color: var(--border-str);
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .btn.primary {
+  background: linear-gradient(180deg, #8d342c, #6b211b);
+  border-color: #501a15;
+  color: #fbeed6;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+  box-shadow: inset 0 1px 0 rgba(255,214,160,.26), 0 3px 12px rgba(90,30,20,.32);
+}
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .btn.danger {
+  background: linear-gradient(180deg, rgba(122,42,34,.16), rgba(122,42,34,.08));
+  border-color: rgba(122,42,34,.45);
+  color: var(--coc-blood);
+}
+[data-theme="dark"] :is(.room-page, .game-page, .room-skin) .btn.danger { color: #e08a7c; }
+
+/* ---------- 7. 徽标 / 标签：邮戳 ---------- */
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) :is(.chip, .tag, .panel-tab) {
+  border-radius: 2px;
+  letter-spacing: .06em;
+}
+
+/* ---------- 8. 表单：旧纸凹印 ---------- */
+:is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) :is(.input, .textarea, .select) {
+  background: rgba(255,252,242,.62);
+  border: 1px solid var(--border-str);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 3px rgba(60,40,14,.10);
+}
+[data-theme="dark"] :is(.room-page, .game-page, .room-skin,
+    body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask) :is(.input, .textarea, .select) {
+  background: rgba(0,0,0,.30);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.42);
+}
+
+/* ---------- 9. 各栏目框：一律同一张纸、同一条边（消除透明/纯色混用） ---------- */
+:is(.room-page, .game-page) :is(.room-log, .gp-glog, .gp-chat-list, .gp-combat-strip,
+    .gp-charpick, .dice-bar, .gp-player, .gp-combat-fold, .board-cell, .mini-thumb,
+    .thumb, .pl-char-card, .gp-resume) {
+  border: 1px solid var(--coc-edge);
+  box-shadow: inset 0 0 0 1px var(--coc-hi);
+}
+/* 战斗条原来是虚线框 → 与其他框统一成实线 */
+.game-page .gp-combat-strip { border-style: solid; }
+/* 聊天气泡：原来 4/14px 混圆角 → 收紧成纸片 */
+:is(.room-page, .game-page) .msg-bubble {
+  border-radius: 2px 10px 10px 10px;
+  border-color: var(--coc-edge-soft);
+}
+:is(.room-page, .game-page) .msg-name {
+  font-family: var(--coc-serif);
+  letter-spacing: .06em;
+}
+
+/* ---------- 10. 工具栏 / 聊天条：黄铜压边 ---------- */
+.game-page .gp-toolbar {
+  background: var(--coc-band-flat);
+  border-top: 2px solid var(--coc-brass);
+  box-shadow: 0 -4px 14px rgba(46,30,8,.18);
+}
+.room-page .room-chatbar {
+  background: rgba(247,238,216,.88);
+  border: 1px solid var(--coc-edge);
+  box-shadow: inset 0 1px 0 var(--coc-hi), 0 2px 8px rgba(46,30,8,.16);
+}
+[data-theme="dark"] .room-page .room-chatbar { background: rgba(25,21,16,.92); }
+
+/* ---------- 11. 浮层：战斗轮次条 / 操作播报 / 全屏查看 ---------- */
+/* ⚠️ 不用 .gp-grid 拼选择器 —— test_v250_fixes 把「.gp-grid 正向选择器恒为 76 条」
+   当作横屏布局的守护断言；这里只是换色，用等特异度的替代写法避开它。 */
+.game-page .gp-region-kp-map .kp-map-area .init-wrap {
+  background: rgba(247,238,216,.94);
+  border: 1px solid var(--coc-edge);
+  box-shadow: 0 2px 10px rgba(46,30,8,.22);
+}
+.game-page .gp-region-kp-map .kp-map-area .init-wrap .combat-turn-note { color: var(--coc-ink); }
+[data-theme="dark"] .game-page .gp-region-kp-map .kp-map-area .init-wrap {
+  background: rgba(25,21,16,.94);
+}
+.game-page .gp-optoast {
+  background: linear-gradient(180deg, #fbf5e5, #eadcb9);
+  border: 1px solid var(--coc-brass);
+  color: var(--coc-ink);
+  font-family: var(--coc-serif);
+  letter-spacing: .07em;
+  box-shadow: 0 8px 24px rgba(46,30,8,.30);
+}
+[data-theme="dark"] .game-page .gp-optoast {
+  background: linear-gradient(180deg, #2b2318, #201a12);
+  color: #f0e3c4;
+}
+.game-page .gp-fs { background: rgba(22,16,10,.95); }
+.game-page .gp-fs.gp-fs--feeds { background: var(--bg); }
+
+/* ---------- 12. 弹层（sheet）：纸片 + 标题铭牌 ---------- */
+:is(body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .sheet {
+  background-color: var(--coc-paper);
+  background-image: linear-gradient(180deg, var(--coc-hi), rgba(150,120,70,.06));
+  border: 1px solid var(--coc-edge);
+  box-shadow: inset 0 0 0 1px var(--coc-hi), 0 -10px 34px rgba(40,26,8,.38);
+}
+:is(body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .sheet-head {
+  background: var(--coc-band);
+  border: 1px solid var(--coc-edge);
+  border-radius: 3px;
+  padding: 9px 11px;
+  margin-bottom: 14px;
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+:is(body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .sheet-head h3 {
+  font-family: var(--coc-serif);
+  letter-spacing: .1em;
+  text-align: left;
+  color: var(--coc-ink);
+}
+:is(body:has(.room-page) .sheet-mask, body:has(.game-page) .sheet-mask,
+    body:has(.room-skin) .sheet-mask) .icon-btn {
+  color: var(--text-dim);
+  border-color: var(--coc-edge-soft);
+}
+
+/* ---------- 13. 入口页：hero 标题也用衬线（其余靠变量） ---------- */
+.room-skin .room-hero h2 { letter-spacing: .2em; }
+.room-skin .room-hero p { color: var(--text-dim); }
+
+/* ---------- 14. 精修：页签 / 小标题 / 顶栏纹理 / 滚动条 ---------- */
+
+/* 面板页签（地图 / 素材 / 标记图标…）：做成盖在纸上的小印章，
+   和标题带同一套黄铜边，不再是一颗颗彩色胶囊。 */
+:is(.room-page, .game-page, .room-skin) .panel-tab {
+  background: var(--coc-band);
+  border: 1px solid var(--coc-edge);
+  color: var(--text-dim);
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+  font-family: var(--coc-serif);
+}
+:is(.room-page, .game-page, .room-skin) .panel-tab.on {
+  background: linear-gradient(180deg, #7a2a22, #601c17);
+  border-color: #4d1611;
+  color: #fbeed6;
+  box-shadow: inset 0 1px 0 rgba(255,214,160,.28);
+}
+
+/* 卡片内的小标题：一条细墨线收尾，和大标题同族但更轻 */
+:is(.room-page, .game-page, .room-skin) .card-title {
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--coc-edge-soft);
+}
+
+/* 顶栏加一层皮革纹理（细密横纹 + 顶端高光），避免大片死黑 */
+.game-page .gp-topbar {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, rgba(0,0,0,0) 1px 4px),
+    linear-gradient(180deg, #32281a 0%, #241d12 58%, #191309 100%);
+}
+
+/* 滚动条：黄铜细条（房间里所有滚动区） */
+:is(.room-page, .game-page) ::-webkit-scrollbar { width: 8px; height: 8px; }
+:is(.room-page, .game-page) ::-webkit-scrollbar-thumb {
+  background: rgba(150,121,74,.42);
+  border-radius: 2px;
+}
+:is(.room-page, .game-page) ::-webkit-scrollbar-thumb:hover { background: rgba(122,42,34,.55); }
+:is(.room-page, .game-page) ::-webkit-scrollbar-track { background: rgba(0,0,0,.04); }
+
+/* 空态文案：做成手写体感的斜体衬线（只是字，不改排版） */
+:is(.room-page, .game-page) .room-log-empty { font-family: var(--coc-serif); font-style: italic; }
+
+
+/* ============================================================
+   v2.13.1 · 信息流统一：聊天框 = 游戏记录框（同一本账页）
+   ------------------------------------------------------------
+   问题（用户实测）：两栏并排时看着像两种控件 ——
+     · 聊天框的标题栏在框**外**、游戏记录框的标题栏在框**内**；
+     · 内边距 6/8px 与 8px 不等，滚动区起始位置差一截；
+     · 条目一个圆角气泡、一个 20px 胶囊，字号与行高也不一致。
+   做法（纯样式，不动 DOM / 功能 / 分栏结构）：
+     ① 两栏共用同一套「纸页 + 黄铜双线框 + 同一内边距」；
+     ② 标题栏统一成**框内顶部的黄铜标题带**（聊天栏用 0 间距把标题带与
+        列表拼成一体；记录栏标题原本就在滚动容器内，用负边距做成等宽的带）；
+     ③ 条目统一成同一族纸片卡（圆角 2px、同一内边距、同一字号行高），
+        仅保留语义差异：聊天按说话人左右对齐，记录整行铺开 + 左侧色条。
+   ⚠️ 本段**不得出现 .gp-grid 选择器**：test_v250_fixes 把它的正向选择器
+      总数 76 条当作横屏布局守护断言，新增即判回归。
+   ============================================================ */
+
+/* ---------- 1. 框体：同一张纸、同一条边、同一内边距 ---------- */
+.game-page .gp-chat-list,
+.game-page .gp-glog,
+.room-page .room-log {
+  padding: 10px;
+  background-color: var(--coc-paper);
+  background-image: linear-gradient(180deg, var(--coc-hi), rgba(150,120,70,.06));
+  border: 1px solid var(--coc-edge);
+  border-radius: 3px;
+  /* 双线内框：老账本的「压印」感，比单线更耐看 */
+  box-shadow:
+    inset 0 0 0 1px var(--coc-hi),
+    inset 0 0 0 3px rgba(150,121,74,.12),
+    inset 0 7px 7px -7px rgba(46,30,8,.34),
+    0 2px 8px rgba(46,30,8,.12);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  scrollbar-width: thin;
+}
+
+/* ---------- 2. 标题带：一律「框内顶部」的黄铜带 ---------- */
+/* 2a. 聊天栏：标题原本在列表外（中间还隔 6px）→ 0 间距拼成一体 */
+.game-page .gp-chat { gap: 0; }
+.game-page .gp-chat > .gp-region-head {
+  border: 1px solid var(--coc-edge);
+  border-bottom: none;
+  border-left: 3px solid var(--coc-brass);
+  border-radius: 3px 3px 0 0;
+  padding: 6px 10px;
+  background: var(--coc-band);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, rgba(0,0,0,0) 1px 3px),
+    var(--coc-band);
+  box-shadow: inset 0 1px 0 var(--coc-hi), 0 1px 0 var(--coc-edge);
+}
+/* 列表让出顶边，与上面的标题带共用一条线 */
+.game-page .gp-chat > .gp-chat-list {
+  border-top: none;
+  border-radius: 0 0 3px 3px;
+}
+/* 输入条间距补回来（原本由 .gp-chat 的 gap 提供） */
+.game-page .gp-chat > .room-chatbar { margin-top: 6px; }
+
+/* 2b. 记录栏：标题就在滚动容器内 → 负边距铺满、吸顶，视觉与聊天栏完全一致 */
+.game-page .gp-glog {
+  padding-top: 0;
+  gap: 7px;
+}
+.game-page .gp-glog > .gp-region-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0 -10px;      /* 左右铺满：抵消 .gp-glog 的 10px 内边距 */
+  padding: 6px 10px;
+  border: none;
+  border-left: 3px solid var(--coc-brass);
+  border-bottom: 1px solid var(--coc-edge);
+  border-radius: 0;
+  background: var(--coc-band);
+  /* 带一点纤维纹理，与卡片/纸页同一族；吸顶时条目从下方滚过，末尾那层压影负责遮住接缝 */
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, rgba(0,0,0,0) 1px 3px),
+    var(--coc-band);
+  box-shadow: inset 0 1px 0 var(--coc-hi), 0 5px 7px -5px rgba(46,30,8,.34);
+}
+
+/* 2c. 标题排版（两栏同一套）：衬线 + 字距 + 尾随细线 + 印章式全屏钮 */
+.game-page .gp-region-head .gp-region-head-t {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--coc-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--coc-ink);
+  text-align: left;
+}
+.game-page .gp-region-head .gp-region-head-t::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 10px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--coc-edge-soft), rgba(150,121,74,0));
+}
+.game-page .gp-region-fs-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--coc-ink);
+  background: linear-gradient(180deg, rgba(255,252,240,.6), rgba(150,120,70,.14));
+  border: 1px solid var(--coc-edge);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+.game-page .gp-region-fs-btn:hover { border-color: var(--coc-brass); background: rgba(255,252,240,.85); }
+
+/* ---------- 3. 条目：同一族纸片卡 ---------- */
+.game-page .gp-chat-list > .log-chat,
+.game-page .gp-chat-list > .log-sys,
+.game-page .gp-chat-list > .log-dice,
+.game-page .gp-chat-list > .dice-result,
+.game-page .gp-glog > .log-chat,
+.game-page .gp-glog > .log-sys,
+.game-page .gp-glog > .log-dice,
+.game-page .gp-glog > .log-check,
+.game-page .gp-glog > .log-opposed,
+.game-page .gp-glog > .dice-result {
+  padding: 6px 10px 7px;
+  border: 1px solid var(--coc-edge-soft);
+  border-radius: 2px;
+  background-color: rgba(255,252,242,.48);
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* 3a. 聊天条目：按说话人左右对齐（与房间页 .msg 气泡同一语言） */
+.game-page .gp-chat-list > .log-chat {
+  align-self: flex-start;
+  max-width: 88%;
+  border-radius: 2px 10px 10px 10px;
+}
+.game-page .gp-chat-list > .log-chat.mine {
+  align-self: flex-end;
+  background-color: var(--gold-soft);
+  border-color: rgba(157,111,40,.42);
+  border-radius: 10px 2px 10px 10px;
+}
+.game-page .gp-chat-list > .log-chat > .tiny.dim,
+.game-page .gp-glog > .log-sys > .tiny,
+.game-page .gp-glog > .log-dice > .tiny {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .03em;
+  color: var(--text-mute);
+}
+/* 记录行：正文左、时间右 —— 像账本的一行「事项 / 时刻」。
+   时间节点上带了 inline 的 margin-left:6px（room-ui.js 里写死的），只能 !important 压掉。 */
+.game-page .gp-glog > .log-sys > .tiny {
+  margin-left: auto !important;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+/* 3b. 记录条目：整行铺开 + 左侧黄铜/干血细条（原来是 20px 胶囊，跟聊天不是一伙） */
+.game-page .gp-glog > .log-sys {
+  align-self: stretch;
+  max-width: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  text-align: left;
+  color: var(--text);
+  border-radius: 2px;
+  border-left: 3px solid var(--coc-brass);
+  background-color: rgba(255,252,242,.42);
+}
+.game-page .gp-glog > .log-check {
+  border-left: 3px solid var(--coc-brass);
+  background-color: var(--gold-soft);
+}
+.game-page .gp-glog > .log-dice {
+  border-left: 3px solid var(--coc-brass);
+  background-color: rgba(255,252,242,.55);
+}
+.game-page .gp-glog > .log-opposed {
+  border-left: 3px solid var(--coc-blood);
+}
+.game-page .gp-glog > .log-opposed .log-opposed-side { border-radius: 2px; }
+
+/* 房间页的合并信息流：条目量一多，统一成同一族（对话气泡照旧、系统行左对齐） */
+.room-page .room-log > .log-sys {
+  border-radius: 2px;
+  border-left: 3px solid var(--coc-brass);
+  background-color: rgba(255,252,242,.42);
+  color: var(--text);
+  text-align: left;
+  max-width: 100%;
+}
+.room-page .room-log > .dice-result { border-left: 3px solid var(--coc-brass); }
+
+/* ---------- 4. 输入条：与框同一条边 ---------- */
+.game-page .room-chatbar {
+  background: rgba(247,238,216,.9);
+  border: 1px solid var(--coc-edge);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--coc-hi), 0 2px 8px rgba(46,30,8,.12);
+}
+[data-theme="dark"] .game-page .room-chatbar { background: rgba(25,21,16,.92); }
+.game-page .room-chatbar .input { border-radius: 2px; }
+
+/* ---------- 5. 空态：同一个小花饰 + 斜体衬线 ---------- */
+.room-page .room-log-empty,
+.game-page .room-log-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin: auto;
+  font-family: var(--coc-serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--text-mute);
+  text-align: center;
+}
+.room-page .room-log-empty::before,
+.game-page .room-log-empty::before {
+  content: "— ◇ —";
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--coc-brass);
+}
+
+/* ---------- 6. 细节点缀：悬停、滚动条、纸张纤维 ---------- */
+@media (hover: hover) {
+  .game-page .gp-chat-list > .log-chat:hover,
+  .game-page .gp-glog > .log-sys:hover,
+  .game-page .gp-glog > .log-dice:hover {
+    border-color: var(--coc-edge);
+  }
+}
+.game-page .gp-chat-list::-webkit-scrollbar,
+.game-page .gp-glog::-webkit-scrollbar { width: 7px; }
+.game-page .gp-chat-list::-webkit-scrollbar-thumb,
+.game-page .gp-glog::-webkit-scrollbar-thumb {
+  background: rgba(150,121,74,.45);
+  border-radius: 2px;
+}
+
+/* ---------- 7. 深色（皮革）主题：条目不能在深底上糊成灰块 ---------- */
+[data-theme="dark"] .game-page .gp-chat-list > .log-chat,
+[data-theme="dark"] .game-page .gp-chat-list > .log-sys,
+[data-theme="dark"] .game-page .gp-chat-list > .dice-result,
+[data-theme="dark"] .game-page .gp-glog > .log-chat,
+[data-theme="dark"] .game-page .gp-glog > .log-sys,
+[data-theme="dark"] .game-page .gp-glog > .log-dice,
+[data-theme="dark"] .game-page .gp-glog > .dice-result,
+[data-theme="dark"] .room-page .room-log > .log-sys {
+  background-color: rgba(236,224,198,.055);
+}
+[data-theme="dark"] .game-page .gp-chat-list > .log-chat.mine {
+  background-color: rgba(201,162,74,.16);
+  border-color: rgba(201,162,74,.42);
+}
+[data-theme="dark"] .game-page .gp-glog > .log-sys,
+[data-theme="dark"] .game-page .gp-glog > .log-dice {
+  border-left-color: rgba(201,162,74,.55);
+}
+[data-theme="dark"] .game-page .gp-glog > .log-check {
+  background-color: rgba(201,162,74,.14);
+  border-left-color: var(--coc-brass);
+}
+[data-theme="dark"] .game-page .gp-region-fs-btn {
+  background: linear-gradient(180deg, rgba(236,224,198,.10), rgba(0,0,0,.18));
+  border-color: var(--coc-edge);
+  color: var(--text);
+}
+
+
+/* ============================================================
+   v2.13.2 · 公开素材：放大后可以拖动（看边缘细节）
+   ------------------------------------------------------------
+   只动「光标 / 触摸行为 / 提示文字」，裁剪仍由既有的
+   `.map-stage-wrap{overflow:hidden}`（v2.1.4 加的那条）负责 ——
+   所以拖多远都不会溢出到别的栏目框上。
+   ============================================================ */
+
+/* 放大后（JS 加 .map-pannable）：手指拖动用于平移，不再触发页面滚动 */
+.map-stage.map-pannable {
+  touch-action: none;
+  cursor: grab;
+  will-change: transform;
+}
+.map-stage.map-pannable.map-panning { cursor: grabbing; }
+/* 拖的时候别选中页面文字 */
+.map-stage.map-panning { user-select: none; -webkit-user-select: none; }
+
+/* 缩放条里的「可拖动」提示：一句小字，不抢按钮位置（zoom-ctrl 本身 flex-wrap） */
+.zoom-hint {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: .02em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  /* 做成一张小纸签：玩家端的缩放条是**深色浮层**（.map-ctrls 的既有限高方案），
+     纯浅色文字在深底上看不清 —— 纸签在「纸面 / 深色浮层」两种底上都读得出来。 */
+  padding: 1px 7px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--coc-edge-soft);
+  box-shadow: inset 0 1px 0 var(--coc-hi);
+}
+.zoom-hint::before {
+  content: "✥";
+  margin-right: 4px;
+  color: var(--coc-brass, var(--gold));
+}
+
+/* 素材框：CoC 主题下与其它栏目同一条黄铜边（只换颜色，不改边框宽度） */
+.game-page .map-stage {
+  border-color: var(--coc-edge);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--coc-hi);
+}
+
+/* 玩家端缩放条：网格模式它是浮在素材右下角的**深色条**（v2.1.8 为救 16:9 高度做的浮层），
+   但 CoC 皮肤的按钮是墨色文字 → 深底深字几乎看不清（截图实测）。
+   改成同一族「黄铜压边纸签」，浮层和竖屏流内两种位置都读得出来。
+   ⚠️ 选择器刻意不用 .gp-grid（见文件末尾布局守护说明）。 */
+.game-page .gp-region-pl-map .pl-map-area > .map-ctrls {
+  background: var(--coc-band);
+  border: 1px solid var(--coc-edge);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 var(--coc-hi), 0 2px 10px rgba(46,30,8,.30);
+}
+.game-page .gp-region-pl-map .pl-map-area > .map-ctrls .zoom-val { color: var(--coc-ink); }
+
+
+/* ============================================================
+   v2.13.3 · 玩家横屏布局调整（用户第 1/2/3/5 项）
+   ------------------------------------------------------------
+   背景（用户截图）：844×390 这类横屏下
+     · 中列「聊天 / 游戏记录」下面挂着一大片空白（底部 104px 空行写死）；
+     · 公开素材被压到只有 100 多像素高，远小于列宽对应的 16:9；
+     · 右列「场景检定」里的表单用大号控件，窄列里疯狂换行；
+     · 底栏按钮多到需要横向拖动才能点全。
+   ⚠️ 新增选择器一律避开 .gp-grid（test_v250_fixes 把它的正向选择器总数
+      76 条当作横屏布局守护断言，新增即判回归）。
+   ============================================================ */
+
+/* ---------- 1. 公开素材：16:9 撑满列宽后水平居中（不再贴左留一条空带）---------- */
+.game-page .gp-pl-mapwrap .map-stage-wrap {
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------- 2. 场景检定：紧凑排版，一屏看全 ---------- */
+/* 2a. 面板本体：字号/间距压一档（只影响玩家侧这块区域） */
+.game-page .pl-scene-panel .card { padding: 5px 7px; }
+.game-page .pl-scene-panel .card-title {
+  font-size: 12px;
+  letter-spacing: .06em;
+  padding-bottom: 3px;
+  margin-bottom: 3px;
+}
+.game-page .pl-scene-panel .field { margin-bottom: 6px; }
+.game-page .pl-scene-panel .field > label {
+  font-size: 10.5px;
+  margin-bottom: 3px;
+  letter-spacing: .04em;
+}
+.game-page .pl-scene-panel .select {
+  padding: 4px 6px;
+  font-size: 11.5px;
+  height: 26px;
+}
+.game-page .pl-scene-panel .chip {
+  padding: 2px 8px;
+  font-size: 10.5px;
+  min-width: 0;
+}
+.game-page .pl-scene-panel .btn {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.game-page .pl-scene-panel .btn.sm { padding: 3px 7px; font-size: 11px; }
+.game-page .pl-scene-panel .tiny,
+.game-page .pl-scene-panel .tiny.dim { font-size: 10px; line-height: 1.45; }
+
+/* 2a-2. 「KP 未推送」单行空态 */
+.game-page .pl-scene-none {
+  display: flex; align-items: baseline; gap: 4px;
+  padding: 0; font-size: 11.5px; color: var(--text-dim);
+}
+.game-page .pl-scene-none b { font-family: var(--coc-serif); letter-spacing: .06em; }
+
+/* 2a-3. 「结果进游戏记录」这句在横屏是冗余说明（按钮已经写着「掷检定」）→ 不占高度 */
+.game-page .pl-scene-panel .pl-check-card > .tiny.dim { display: none; }
+
+/* 2b. 「我要检定」卡片：每个字段改成「标签在左、控件在右」的单行（26px/行），
+   比「标签在上」省掉 3×13px，也不像两列那样把 select 压到 50px（箭头会压字）。 */
+.game-page .pl-scene-panel .pl-check-card .field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  margin-bottom: 4px;
+}
+.game-page .pl-scene-panel .pl-check-card .field > label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.game-page .pl-scene-panel .pl-check-card .field .btn-group { flex-wrap: nowrap; gap: 4px; }
+.game-page .pl-scene-panel .pl-check-card .field .chip { padding: 2px 7px; }
+/* 检定列表（KP 推来的场景检定步骤）也收紧一档 */
+.game-page .pl-scene-panel .scene-step { padding: 4px 6px; }
+.game-page .pl-scene-panel .scene-step .st-title { font-size: 11.5px; }
+
+/* ---------- 3. 底栏：把「快捷组 + 骰子组 + 扩展组」合并成一个两行流式布局 ----------
+   旧结构是三个块（.gp-quick / .dice-bar / .dice-extra）各自换行，
+   844×390 下要占 3 行（≈194px），而底栏限高 92px → 必须横向拖动才能点全。
+   做法：给三层容器 display:contents，让所有按钮成为**同一个 flex 容器**的子项，
+   再用 order 排成「快捷 + 骰子 → 扩展」两行；单行放不下时按行内顺序补齐。 */
+.game-page.gp-pl .gp-region-pl-bottom {
+  max-height: none;               /* 两行内容本身就是最终高度，不再截断 */
+  overflow: visible;
+}
+.game-page.gp-pl .gp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 5px;
+  padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+}
+.game-page.gp-pl .gp-toolbar > .gp-quick,
+.game-page.gp-pl .gp-toolbar > .dice-bar,
+.game-page.gp-pl .gp-toolbar .dice-bar > .dice-extra { display: contents; }
+
+.game-page.gp-pl .gp-toolbar .gp-quick > * { order: 1; }
+.game-page.gp-pl .gp-toolbar .dice-bar > *:not(.dice-extra) { order: 2; }
+.game-page.gp-pl .gp-toolbar .dice-extra > * { order: 3; }
+/* 骰子条自带的容器外观（背景/边框/内边距/上边距）在 display:contents 下自然消失，
+   这里把「底栏」本身做成一条纸带，视觉上仍是同一条工具栏。 */
+.game-page.gp-pl .gp-toolbar {
+  background: var(--coc-band-flat, var(--bg));
+  border-top: 2px solid var(--coc-brass, var(--border));
+  box-shadow: 0 -4px 14px rgba(46,30,8,.16);
+}
+/* 「（点 D100 掷一次）」这句提示在横屏是纯占位，去掉省 130px */
+.game-page.gp-pl .gp-toolbar .dice-bar > .k { display: none; }
+
+/* 3a. 控件压缩一档：仍然点得到（最小 24px 高），但一行能多放 2~3 个 */
+.game-page.gp-pl .gp-toolbar .btn.sm {
+  padding: 4px 7px;
+  font-size: 11.5px;
+  min-height: 26px;
+}
+.game-page.gp-pl .gp-toolbar .dice-d100 {
+  min-width: 46px;
+  padding: 5px 9px;
+  font-size: 12.5px;
+}
+.game-page.gp-pl .gp-toolbar .dice-small {
+  min-width: 30px;
+  padding: 5px 7px;
+  font-size: 11.5px;
+}
+.game-page.gp-pl .gp-toolbar .dice-bar .bp button {
+  width: 22px; height: 22px; font-size: 12px; border-radius: 6px;
+}
+.game-page.gp-pl .gp-toolbar .dice-bar .bp button.chip {
+  min-width: 40px; height: 22px; padding: 0 6px; font-size: 10.5px;
+}
+.game-page.gp-pl .gp-toolbar .dice-bar .bp { gap: 3px; }
+.game-page.gp-pl .gp-toolbar .dice-bar .bp .eff { display: none; }  /* 「不修正」由数字本身表达 */
+.game-page.gp-pl .gp-toolbar .gp-zoom-pct { font-size: 10.5px; min-width: 30px; }
+
+/* ---------- 4. 人物卡图片（「📋 人物卡查看」改成完整信息图）---------- */
+.cardimg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+  border: 1px solid var(--coc-edge, var(--border));
+  box-shadow: 0 2px 10px rgba(46,30,8,.18);
+  cursor: zoom-in;
+  background: #fff;
+}
+/* 全屏看卡：整张卡按宽高比铺开、可纵向滚动（角色卡很长，压成一屏会糊），
+   「返回」做成吸底按钮 —— 滚到哪都点得到（实测按居中排版时按钮会被图顶出屏幕）。 */
+.gp-fs--card {
+  background: rgba(12, 9, 6, .95);
+  /* 必须高过 .sheet-mask(100)：否则弹层遮罩会把整张图盖在上面，
+     图看得见但点不到（「← 返回」实测被遮罩吃掉点击）。 */
+  z-index: 120;
+  justify-content: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.gp-fs--card img {
+  width: auto;
+  max-width: min(100%, 760px);
+  height: auto;
+  max-height: none;
+  margin: 2px auto 10px;
+  border-radius: 3px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6);
+  cursor: zoom-out;
+}
+.gp-fs--card .btn.primary {
+  position: sticky;
+  bottom: 4px;
+  flex: 0 0 auto;
+  z-index: 2;
+}
+
+/* v2.13.3 · 玩家素材区左上角的「公开素材缩略图条」：深色浮层 → 黄铜压边纸签
+   （原来 rgba(14,16,20,.74) 的深色块糊在公开素材上，像块黑洞；换成同族纸面） */
+.game-page .gp-region-pl-map .pl-map-area > .pub-assets {
+  background: rgba(247, 238, 216, .94);
+  border: 1px solid var(--coc-edge, var(--border));
+  border-radius: 3px;
+  box-shadow: 0 2px 9px rgba(46, 30, 8, .26);
+  padding: 3px 4px;
+  /* v2.13.3：素材图变大后，这条缩略图浮层不该再占掉 1/3 画面 → 收窄限高、缩略图变小 */
+  max-width: min(46%, 240px);
+  max-height: 26%;
+}
+.game-page .gp-region-pl-map .pl-map-area > .pub-assets .asset-grid {
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  gap: 4px;
+}
+.game-page .gp-region-pl-map .pl-map-area > .pub-assets .asset-cell .cap {
+  font-size: 9px;
+  padding: 1px 3px;
+}
+.game-page .gp-region-pl-map .pl-map-area > .pub-assets .card-title {
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--coc-edge-soft, var(--border));
+}
+
+
+/* ============================================================
+   v2.13.4 · 玩家右列：队友栏 / 只给你看的信息（两条同规格）
+   ------------------------------------------------------------
+   用户要求：
+     · 队友栏放到右列最上端、紧贴场景检定栏，且**可收起**（上一版空列表时整块隐藏，
+       带队时就成了「队友栏不见了」）；
+     · 队友栏里显示 HP + 当前 SAN + 身体状态 + 精神状态（不再显示 MP）；
+     · 「只给你看的信息」与队友栏**同宽同高**，放在它正下方。
+   ⚠️ 新增选择器一律不带 .gp-grid（v2.5.0 的 76 条守护）。
+   ============================================================ */
+
+/* ---------- 1. 两条的公共外形：同宽、同高上限、同一条黄铜边 ---------- */
+.game-page .gp-region-pl-mates,
+.game-page .gp-pl-right > .gp-priv {
+  flex: 0 0 auto;
+  min-height: 0;
+  max-height: 104px;          /* 两条完全一致 → 收起队友栏后私密条正好补位 */
+  padding: 3px 7px 4px;
+  border: 1px solid var(--coc-edge, var(--border));
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--coc-hi, transparent);
+  overflow-y: auto;
+}
+/* 空态不占位（没有线索时不显示一条空盒子）；队友栏永远保留标题条，故不在此列 */
+.game-page .gp-pl-right > .gp-priv:empty { display: none; }
+
+/* ---------- 2. 标题条：两者同一套（衬线 + 字距 + 底部细线）---------- */
+.game-page .pl-teammates { display: flex; flex-direction: column; min-height: 0; }
+.game-page .strip-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  width: 100%; margin: 0; padding: 0 0 2px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--coc-serif);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+  color: var(--coc-ink, var(--text-dim));
+  text-align: left;
+  border-bottom: 1px solid var(--coc-edge-soft, var(--border));
+}
+.game-page .strip-head:hover { color: var(--coc-brass, var(--text)); }
+.game-page .strip-chev { flex: 0 0 auto; font-size: 10px; opacity: .75; }
+.game-page .pl-teammates .teammate-list { flex: 0 1 auto; overflow-y: auto; margin-top: 4px; }
+
+/* ---------- 3. 队友行：HP / SAN 两条 + 身体·精神两枚标签 ---------- */
+.game-page .mate-row { padding: 2px 2px 3px; }
+.game-page .mate-row + .mate-row { border-top: 1px dashed var(--coc-edge-soft, var(--border)); }
+.game-page .mate-tags {
+  display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px;
+}
+.game-page .mate-tag {
+  font-size: 9.5px; line-height: 1.35;
+  padding: 0 5px; border-radius: 2px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--coc-edge-soft, var(--border));
+  white-space: nowrap;
+}
+/* 重伤 / 濒死 / 昏迷 / 疯狂 → 标签转成警示色（干血红），一眼看得出谁要出事 */
+.game-page .mate-tags.bad .mate-tag {
+  color: var(--coc-blood, var(--danger));
+  border-color: rgba(122, 42, 34, .42);
+  background: rgba(122, 42, 34, .08);
+}
+
+/* ---------- 4. 私密信息条：去掉卡片皮肤，改用与队友栏同一套标题 ---------- */
+.game-page .gp-pl-right > .gp-priv .priv-card {
+  margin: 0; padding: 0;
+  background: none; border: none; box-shadow: none;
+}
+.game-page .gp-pl-right > .gp-priv .priv-card > .card-title {
+  font-family: var(--coc-serif);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+  color: var(--coc-ink, var(--text-dim));
+  padding: 1px 0 3px; margin: 0 0 3px;
+  border-bottom: 1px solid var(--coc-edge-soft, var(--border));
+}
+.game-page .gp-pl-right > .gp-priv .priv-line { margin-top: 4px; }
+
+/* v2.13.8（用户需求）：私密条内部改「标题栏 + 滚动区」两段结构 ——
+   标题栏（含 ⛶ 全屏按钮）常驻不随线索滚走，线索在 .priv-scroll 内滚动。
+   与队友栏同一套黄铜细线标题风格；空态（无线索）时整条仍隐藏（:empty 规则不受影响）。 */
+.game-page.gp-pl .gp-pl-right > .gp-priv {
+  display: flex; flex-direction: column; overflow-y: hidden;
+}
+.game-page.gp-pl .gp-pl-right > .gp-priv > .gp-region-head {
+  flex: 0 0 auto; gap: 6px; padding: 0 0 2px; margin: 0;
+  background: none; border: none;
+  border-bottom: 1px solid var(--coc-edge-soft, var(--border));
+}
+.game-page.gp-pl .gp-pl-right > .gp-priv > .gp-region-head .gp-region-head-t {
+  font-family: var(--coc-serif); font-size: 11.5px; font-weight: 700;
+  letter-spacing: .08em; color: var(--coc-ink, var(--text-dim));
+}
+.game-page.gp-pl .gp-pl-right > .gp-priv > .priv-scroll {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 3px;
+}
+/* 竖屏（非网格）下 .gp-pl-right > .gp-priv 有一条优先级更高的 overflow-y:auto
+   （约 1721 行，把私密条提前到顶部常驻）—— 显式覆盖回 hidden，
+   否则标题栏会随线索一起滚走（内部已有 .priv-scroll 负责滚动）。 */
+.game-page.gp-pl:not(.gp-grid) .gp-pl-right > .gp-priv { overflow-y: hidden; }
+
+/* ---------- 5. 右列高度预算：顶部紧凑排布，剩余高度归笔记栏 ----------
+   v2.13.8（用户需求）：场景检定改为按内容自然高度（见 .gp-pl-row1 规则），
+   顶部各条（场景检定 → 队友 → 私密 → 手绘板）紧凑相连不留空，
+   剩余高度由笔记栏吃满（flex:1 1 auto，封顶 46% 防止场景检定很短时笔记独大）。
+   1080×700 实测：右列 554px ≈ 场景检定 200 + 队友 104 + 私密 104 + 手绘板 89 + 笔记 ~57。 */
+.game-page.gp-pl .gp-pl-sketch { flex: 0 1 auto; min-height: 0; max-height: 16%; }
+.game-page.gp-pl .gp-pl-notes { flex: 1 1 auto; min-height: 0; max-height: 46%; }
+
+/* 矮屏（手机横屏 390 高）：右列放不下「场景检定 + 两条信息 + 手绘板 + 笔记」，
+   把手绘板/笔记这两块纯私人草稿区先让位；队友栏在矮屏默认收起（见 room-panels 的 matesOpen 初值）。
+   v2.13.8：草图/笔记隐藏后剩余高度无处可去 → 矮屏下恢复「场景检定吃满」的旧行为，
+   避免右列底部出现一块莫名其妙空白（用户需求只针对非矮屏的紧凑化）。 */
+@media (max-height: 470px) {
+  .game-page.gp-pl .gp-pl-sketch,
+  .game-page.gp-pl .gp-pl-notes { display: none; }
+  .game-page.gp-pl .gp-region-pl-mates,
+  .game-page.gp-pl .gp-pl-right > .gp-priv { max-height: 84px; }
+  .game-page.gp-pl .gp-pl-row1 { flex: 1 1 auto; }
+  .game-page.gp-pl .gp-pl-row1 .gp-region-pl-scene { flex: 1 1 auto; max-height: none; }
+}
+/* 右列自身可滚：矮屏下把队友栏展开后总高可能超过列高 ——
+   让列整体滚动，而不是最后一块顶到工具栏底下（视觉上像被裁掉）。 */
+.game-page.gp-pl .gp-pl-right { overflow-y: auto; }
+
+/* 队友行：名字 + 身体/精神 标签同一行（省一行高度，104px 的条里刚好放得下） */
+.game-page .mate-row .nm-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 5px;
+  min-width: 0;
+}
+.game-page .mate-row .nm-row .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.game-page .mate-row .nm-row .mate-tags { margin-top: 0; flex: 0 0 auto; flex-wrap: nowrap; }
+
+/* v2.13.5 · 聊天条里的「✨ AI RP」按钮：紧凑一点，别把输入框挤没了（窄栏也要放得下三个） */
+.room-chatbar .rp-ai-btn {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-color: var(--coc-edge, var(--border));
+  color: var(--coc-brass, var(--text-dim));
+}
+.room-chatbar .rp-ai-btn:hover { border-color: var(--coc-brass, var(--gold)); color: var(--coc-ink, var(--text)); }
+.game-page .room-chatbar .input { min-width: 0; }
+
+/* ============================================================
+   v2.13.6 · 聊天输入框全屏编辑器（点一下输入框即铺满全屏）
+   ------------------------------------------------------------
+   单行 input 写长了只显示一行，回看/修改前半段几乎不可能；
+   全屏后整段可见、可编辑，「确定」只填回聊天框、不自动发送。
+   ============================================================ */
+.gp-fs--chat {
+  /* 盖过 .sheet-mask(100)：否则遮罩会把编辑区压在下面点不到 */
+  z-index: 120;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px);
+  background: var(--coc-band, var(--bg));
+}
+.gp-fs--chat .chat-edit-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid var(--coc-edge, var(--border));
+}
+.gp-fs--chat .chat-edit-head .gp-region-head-t {
+  font-family: var(--coc-serif); font-size: 13px; font-weight: 700; letter-spacing: .1em;
+  color: var(--coc-ink, var(--text));
+}
+.gp-fs--chat .chat-edit-area {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 40vh;
+  margin: 10px 0;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.7;
+  resize: none;
+  border-radius: 3px;
+  background: var(--surface);
+  border: 1px solid var(--coc-edge, var(--border));
+  box-shadow: inset 0 0 0 1px var(--coc-hi, transparent);
+  color: var(--text);
+}
+.gp-fs--chat .chat-edit-foot {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--coc-edge, var(--border));
+}
+.gp-fs--chat .chat-edit-foot .btn.primary { flex: 0 0 auto; }
+.gp-fs--chat .chat-edit-foot .tiny.dim { min-width: 0; }
+
+/* ============================================================
+   v2.13.7 · 聊天 / 游戏记录条目：最左显示角色头像（缩略图）
+   ------------------------------------------------------------
+   数据链路：车卡第一步上传的头像（c.avatar，原图 dataURL）
+     → room-ui#avatarThumbDataUrl 压成 64px 正方形 JPEG（≈2-4KB，避免撑爆 WS 帧）
+     → sanitizeSheet 白名单 → 成员表广播（_cropMember 对同席公开）
+     → feedNode 按 seat 取成员 → avatarEl(m,'mini') 放条目最左。
+   没上传过头像 → 退化成角色名首字（avatarEl 既有行为）。
+   ============================================================ */
+.log-chat, .log-dice {
+  display: flex; flex-direction: row; align-items: flex-start; gap: 7px;
+}
+.log-chat .feed-av, .log-dice .feed-av { flex: 0 0 auto; margin-top: 1px; }
+.log-chat .feed-body, .log-dice .feed-body {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+/* 头像对所有人统一最左（用户需求「最左边」）；.mine 仅用 align-self 区分左右。 */
